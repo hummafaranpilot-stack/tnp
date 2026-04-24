@@ -523,7 +523,7 @@ foreach ($tip_counts as $p => $labels) {
                     <button type="button" class="tab" data-tab="upload" onclick="switchImageTab('upload')">Upload File</button>
                 </div>
                 <div id="imageUrlPane" class="tab-pane">
-                    <input type="url" id="f_image_url" placeholder="https://example.com/image.jpg" oninput="previewImage(this.value)">
+                    <input type="text" id="f_image_url" placeholder="https://example.com/image.jpg or /uploads/xxx.png" oninput="previewImage(this.value)">
                 </div>
                 <div id="imageUploadPane" class="tab-pane hidden">
                     <input type="file" id="f_image_file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="uploadImage(this)">
@@ -583,7 +583,7 @@ foreach ($tip_counts as $p => $labels) {
                         <option value="Traffic Tips">Traffic Tips</option>
                         <option value="Ad Copy Swipes">Ad Copy Swipes</option>
                     </select>
-                    <input type="url" id="link_url" placeholder="https://...">
+                    <input type="text" id="link_url" placeholder="https://...">
                     <button type="button" class="btn btn-primary" onclick="addLink()">+ Add</button>
                 </div>
                 <div id="linksList" class="landers-list"></div>
@@ -618,7 +618,7 @@ foreach ($tip_counts as $p => $labels) {
                 </h4>
                 <div class="lander-row">
                     <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
-                    <input type="url" id="lander_url" placeholder="https://...">
+                    <input type="text" id="lander_url" placeholder="https://...">
                     <select id="lander_advice" title="Capsule type">
                         <option value="">— Capsule (optional) —</option>
                         <option value="prelander">prelander</option>
