@@ -3,6 +3,7 @@ require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/analytics.php';
 require __DIR__ . '/includes/countries.php';
+require __DIR__ . '/includes/tracker.php';
 
 $offers = [];
 $load_error = '';
@@ -12,6 +13,10 @@ try {
 } catch (Throwable $e) {
     $load_error = 'Unable to load offers right now. Please try again later.';
 }
+
+// Log this pageview (server-side fields). Client-side fields (scroll,
+// duration, clicks) arrive via /api.php?action=track beacon.
+$__visit = log_visit();
 
 // Extract unique filter values
 $categories = [];
@@ -810,5 +815,9 @@ foreach ($offers as $o) {
         applyFilters();
     }
 </script>
+<?php if (!empty($__visit['visit_id'])): ?>
+<script>window.TNP_VISIT_ID = <?= (int)$__visit['visit_id'] ?>;</script>
+<script src="/tracker.js?v=<?= @filemtime(__DIR__ . '/tracker.js') ?: time() ?>" defer></script>
+<?php endif; ?>
 </body>
 </html>

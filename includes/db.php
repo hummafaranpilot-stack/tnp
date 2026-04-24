@@ -102,6 +102,50 @@ function ensure_schema(PDO $pdo): void {
         dismissed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    // Analytics: one row per pageview on the public directory. Server-side
+    // fields (ip, ua, page, referrer, country) are filled at insert time;
+    // client-side fields (max_scroll, duration, clicks) are PATCHed later
+    // via the /api.php?action=track beacon before the tab unloads.
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS visits (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        session_token CHAR(32) NOT NULL,
+        visited_at DATETIME NOT NULL,
+        ip_address VARCHAR(45) NOT NULL,
+        country_code CHAR(2) NULL,
+        country_name VARCHAR(80) NULL,
+        city VARCHAR(80) NULL,
+        user_agent VARCHAR(500) NULL,
+        device VARCHAR(16) NULL,
+        page_url VARCHAR(500) NOT NULL,
+        referrer VARCHAR(500) NULL,
+        referrer_source VARCHAR(80) NULL,
+        max_scroll TINYINT UNSIGNED NULL,
+        duration_sec INT NULL,
+        clicks_json TEXT NULL,
+        updated_at DATETIME NULL,
+        INDEX idx_visited_at (visited_at),
+        INDEX idx_session (session_token),
+        INDEX idx_country (country_code),
+        INDEX idx_ip (ip_address)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
+    // Per-IP country cache (ip-api.com free tier is 45 req/min, so we
+    // resolve once and reuse). Separate table so we can expand it later
+    // with city/region/ISP without bloating the visits row.
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS ip_geo_cache (
+        ip_address VARCHAR(45) PRIMARY KEY,
+        country_code CHAR(2) NULL,
+        country_name VARCHAR(80) NULL,
+        city VARCHAR(80) NULL,
+        region VARCHAR(80) NULL,
+        resolved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+
     $done = true;
 }
 

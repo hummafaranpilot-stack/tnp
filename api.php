@@ -12,7 +12,7 @@ if ($action !== 'upload') {
 }
 // top_landers is safe to expose to unauthenticated viewers — it only
 // returns aggregate landing-URL data used by the Promote Now modal.
-$PUBLIC_ACTIONS = ['top_landers'];
+$PUBLIC_ACTIONS = ['top_landers', 'track'];
 if (!in_array($action, $PUBLIC_ACTIONS, true)) {
     require_login_api();
 }
@@ -133,6 +133,35 @@ try {
             $sr++;
         }
         $pdo->commit();
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'track') {
+        $data = read_json();
+        $visit_id = (int)($data['visit_id'] ?? 0);
+        if ($visit_id <= 0) { echo json_encode(['ok' => false]); exit; }
+        // Only accept updates for rows created in the last 6 hours — this
+        // stops someone from replaying a stale visit_id to inject clicks
+        // into old analytics data.
+        $row = $pdo->prepare('SELECT id FROM visits WHERE id = :id AND visited_at > DATE_SUB(NOW(), INTERVAL 6 HOUR)');
+        $row->execute([':id' => $visit_id]);
+        if (!$row->fetchColumn()) { echo json_encode(['ok' => false, 'error' => 'stale']); exit; }
+
+        $max_scroll = isset($data['max_scroll']) ? max(0, min(100, (int)$data['max_scroll'])) : null;
+        $duration = isset($data['duration_sec']) ? max(0, min(86400, (int)$data['duration_sec'])) : null;
+        $clicks = $data['clicks'] ?? [];
+        if (!is_array($clicks)) $clicks = [];
+        // Cap clicks JSON to something reasonable so a buggy client can't bloat the row.
+        if (count($clicks) > 100) $clicks = array_slice($clicks, 0, 100);
+
+        $stmt = $pdo->prepare('UPDATE visits SET max_scroll = :s, duration_sec = :d, clicks_json = :c, updated_at = NOW() WHERE id = :id');
+        $stmt->execute([
+            ':s'  => $max_scroll,
+            ':d'  => $duration,
+            ':c'  => json_encode($clicks),
+            ':id' => $visit_id,
+        ]);
         echo json_encode(['ok' => true]);
         exit;
     }
