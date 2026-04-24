@@ -84,7 +84,7 @@ function shaver_domain_to_offer(array $d): array {
         'category'           => '',
         'revshare'           => '',
         'cpa'                => '',
-        'allowed_geos'       => 'Tier-1',
+        'allowed_geos'       => 'Tier-1 Default',
         'restriction'        => 'No',
         'image_url'          => '',
         'top_landers'        => [], // fetched lazily via /api.php?action=top_landers

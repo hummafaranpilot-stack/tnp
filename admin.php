@@ -3,6 +3,7 @@ require __DIR__ . '/includes/auth.php';
 require_login();
 require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/analytics.php';
+require __DIR__ . '/includes/countries.php';
 
 $offers = [];
 $next_sr_val = 1;
@@ -342,7 +343,11 @@ foreach ($counts as $p => $fields) {
                 </div>
                 <div>
                     <label>Allowed GEOs <span class="field-hint" id="hint_allowed_geos"></span></label>
-                    <input type="text" name="allowed_geos" id="f_allowed_geos" placeholder="e.g. Tier-1">
+                    <select name="allowed_geos" id="f_allowed_geos">
+                        <?php foreach (GEO_OPTIONS as $opt): ?>
+                            <option value="<?= h($opt) ?>"><?= h($opt) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div>
                     <label>Restriction <span class="field-hint" id="hint_restriction"></span></label>

@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/analytics.php';
+require __DIR__ . '/includes/countries.php';
 
 $offers = [];
 $load_error = '';
@@ -281,7 +282,7 @@ foreach ($offers as $o) {
                                         ?>
                                             <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
                                                class="lander-link"
-                                               <?= $tip ? 'title="' . h($tip) . '"' : '' ?>>
+                                               <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
                                                 <span class="lander-name"><?= h($label) ?></span>
                                                 <?php if ($info['advice']): ?>
                                                     <span class="advice-chip advice-<?= h($info['type']) ?>"><?= h($info['advice']) ?></span>
@@ -303,7 +304,16 @@ foreach ($offers as $o) {
                                 </td>
                                 <td class="rev"><?= h($o['revshare']) ?></td>
                                 <td><?= h($o['cpa']) ?></td>
-                                <td class="muted"><?= h($o['allowed_geos']) ?></td>
+                                <td class="muted">
+                                    <?php if ($o['allowed_geos'] === 'Tier-1 (39 Countries)'): ?>
+                                        <button type="button" class="geo-link" onclick="showCountries()">
+                                            Tier-1 (39 Countries)
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        </button>
+                                    <?php else: ?>
+                                        <?= h($o['allowed_geos']) ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="<?= ($restriction_val === 'Yes') ? 'restr-yes' : 'restr-no' ?>"><?= h($restriction_val) ?></td>
                             </tr>
                         <?php endforeach; ?>
@@ -325,7 +335,80 @@ foreach ($offers as $o) {
     </main>
 </div>
 
+<!-- Tier-1 countries modal -->
+<div id="countriesModal" class="modal hidden" onclick="if(event.target===this) hideCountries()">
+    <div class="modal-card countries-modal">
+        <div class="modal-header">
+            <h3>Tier-1 Countries <span class="modal-count">39 total</span></h3>
+            <button class="modal-close" onclick="hideCountries()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <?php foreach (TIER1_COUNTRIES as $region => $countries): ?>
+                <div class="country-region">
+                    <h4><?= h($region) ?> <span class="region-count">(<?= count($countries) ?>)</span></h4>
+                    <div class="country-grid">
+                        <?php foreach ($countries as $c): ?>
+                            <div class="country-item">
+                                <span class="country-flag"><?= $c['flag'] ?></span>
+                                <span class="country-name"><?= h($c['name']) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Countries modal controls
+    function showCountries() {
+        document.getElementById('countriesModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function hideCountries() {
+        document.getElementById('countriesModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hideCountries();
+    });
+
+    // Custom hover tooltip for data-tip elements
+    (function() {
+        const tip = document.createElement('div');
+        tip.className = 'custom-tooltip';
+        document.body.appendChild(tip);
+        function place(el) {
+            const text = el.getAttribute('data-tip');
+            if (!text) return;
+            tip.innerHTML = '';
+            const [heading, ...rest] = text.split(' — ');
+            if (rest.length) {
+                tip.innerHTML = '<strong>' + escapeHtml(heading) + '</strong><br>' + escapeHtml(rest.join(' — '));
+            } else {
+                tip.textContent = text;
+            }
+            const r = el.getBoundingClientRect();
+            tip.style.left = (r.left + r.width / 2) + 'px';
+            tip.style.top = r.top + 'px';
+            tip.classList.add('visible');
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c =>
+                ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        document.addEventListener('mouseover', e => {
+            const el = e.target.closest('[data-tip]');
+            if (el) place(el);
+        });
+        document.addEventListener('mouseout', e => {
+            const el = e.target.closest('[data-tip]');
+            if (el) tip.classList.remove('visible');
+        });
+        document.addEventListener('scroll', () => tip.classList.remove('visible'), true);
+    })();
+
     const activeFilters = { category: new Set(), platform: new Set(), geo: new Set(), restriction: new Set() };
     const totalOffers = <?= $total_offers ?>;
 

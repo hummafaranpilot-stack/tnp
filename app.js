@@ -65,13 +65,14 @@ function openForm(offer = null) {
 
     ensureSelectOption('f_platform', offer?.platform || '');
     ensureSelectOption('f_category', offer?.category || '');
+    ensureSelectOption('f_allowed_geos', offer?.allowed_geos || '');
     document.getElementById('f_platform').value = offer?.platform || 'BuyGoods';
     document.getElementById('f_offer_name').value = offer?.offer_name || '';
     document.getElementById('f_offer_id').value = offer?.offer_id || '';
     document.getElementById('f_category').value = offer?.category || 'Weight Loss';
     document.getElementById('f_revshare').value = offer?.revshare || '';
     document.getElementById('f_cpa').value = offer?.cpa || '';
-    document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1';
+    document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1 Default';
     document.getElementById('f_restriction').value = offer?.restriction || 'No';
     document.getElementById('f_affiliate_page_url').value = offer?.affiliate_page_url || '';
 
@@ -121,7 +122,7 @@ function applyPlatformDefaults(platform, isNew) {
 
     const fields = ['revshare', 'cpa', 'allowed_geos', 'restriction', 'category'];
     const initial = {
-        allowed_geos: 'Tier-1',
+        allowed_geos: 'Tier-1 Default',
         restriction: 'No',
         category: 'Weight Loss',
     };
@@ -329,7 +330,7 @@ function renderLanders() {
         const description = derived.description || '';
         const visitsBadge = l.visits ? `<span class="visits-tag">${l.visits} visits</span>` : '';
         const adviceChip = advice
-            ? `<span class="advice-chip advice-${type}"${description ? ` title="${escapeHtml(description)}"` : ''}>${escapeHtml(advice)}</span>`
+            ? `<span class="advice-chip advice-${type}"${description ? ` data-tip="${escapeHtml(description)}"` : ''}>${escapeHtml(advice)}</span>`
             : '';
         const upDisabled = i === 0 ? 'disabled' : '';
         const downDisabled = i === landers.length - 1 ? 'disabled' : '';
@@ -409,6 +410,44 @@ async function deleteOffer(btn) {
     if (result.ok) window.location.reload();
     else alert('Delete failed: ' + (result.error || 'Unknown error'));
 }
+
+// Custom hover tooltip for data-tip elements (used by advice chips)
+(function initTooltip() {
+    if (typeof document === 'undefined' || document.querySelector('.custom-tooltip')) return;
+    const tip = document.createElement('div');
+    tip.className = 'custom-tooltip';
+    document.body.appendChild(tip);
+    function place(el) {
+        const text = el.getAttribute('data-tip');
+        if (!text) return;
+        tip.innerHTML = '';
+        const parts = text.split(' — ');
+        if (parts.length > 1) {
+            const head = document.createElement('strong');
+            head.textContent = parts[0];
+            const br = document.createElement('br');
+            const rest = document.createTextNode(parts.slice(1).join(' — '));
+            tip.appendChild(head);
+            tip.appendChild(br);
+            tip.appendChild(rest);
+        } else {
+            tip.textContent = text;
+        }
+        const r = el.getBoundingClientRect();
+        tip.style.left = (r.left + r.width / 2) + 'px';
+        tip.style.top = r.top + 'px';
+        tip.classList.add('visible');
+    }
+    document.addEventListener('mouseover', e => {
+        const el = e.target.closest('[data-tip]');
+        if (el) place(el);
+    });
+    document.addEventListener('mouseout', e => {
+        const el = e.target.closest('[data-tip]');
+        if (el) tip.classList.remove('visible');
+    });
+    document.addEventListener('scroll', () => tip.classList.remove('visible'), true);
+})();
 
 async function dismissSuggestion(event, btn) {
     event.stopPropagation();

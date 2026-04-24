@@ -425,11 +425,12 @@ main.page { padding: 2rem 0 4rem; }
 .offer-table td.restr-no { color: var(--success); font-weight: 500; }
 .offer-table td.restr-yes { color: var(--danger); font-weight: 500; }
 
-.landers { display: flex; flex-direction: column; gap: 0.3rem; }
+.landers { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
 .lander-link {
-    display: inline-flex;
+    display: inline-grid;
+    grid-template-columns: 7rem auto;
     align-items: center;
-    gap: 0.4rem;
+    gap: 0.5rem;
     white-space: nowrap;
     text-decoration: none;
     font-size: 13px;
@@ -439,14 +440,10 @@ main.page { padding: 2rem 0 4rem; }
     cursor: pointer;
     transition: color 0.15s;
 }
-.lander-link:hover {
-    color: var(--indigo-600);
-    text-decoration: none;
-}
+.lander-link:hover { text-decoration: none; color: var(--indigo-600); }
 .lander-link .lander-name { text-decoration: none; }
 .lander-link:hover .lander-name { text-decoration: underline; }
-/* When chip has title attribute, show help cursor */
-.lander-link .advice-chip[title] { cursor: help; }
+.lander-link .advice-chip { justify-self: start; cursor: help; }
 
 .link {
     color: var(--indigo-600);
@@ -773,12 +770,20 @@ main.page { padding: 2rem 0 4rem; }
 }
 .sidebar-brand {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 0.625rem;
-    padding: 0.5rem 0.5rem 1rem;
+    padding: 0.25rem 0.5rem 1rem;
     border-bottom: 1px solid var(--border-light);
     margin-bottom: 0.75rem;
 }
+.sidebar-brand .brand-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--r-lg);
+}
+.sidebar-brand .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.01em; display: block; }
+.sidebar-brand .brand-tag { font-size: 11px; color: var(--text-muted); font-weight: 500; display: block; margin-top: 1px; }
 .sidebar-nav {
     flex: 1;
     display: flex;
@@ -1418,6 +1423,129 @@ main.page { padding: 2rem 0 4rem; }
     box-shadow: var(--shadow-sm);
 }
 .remove-img:hover { background: #b91c1c; }
+
+/* ============ Custom hover tooltip ============ */
+.custom-tooltip {
+    position: fixed;
+    transform: translate(-50%, calc(-100% - 14px));
+    background: linear-gradient(135deg, #0b1229 0%, #1e1b4b 100%);
+    color: #fff;
+    padding: 0.75rem 0.95rem;
+    border-radius: var(--r-md);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.5;
+    max-width: 300px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    z-index: 1000;
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.3), 0 2px 6px rgba(15, 23, 42, 0.15);
+    white-space: normal;
+    letter-spacing: 0;
+    text-align: left;
+    text-transform: none;
+    border: 1px solid rgba(99, 102, 241, 0.35);
+}
+.custom-tooltip.visible {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 10px));
+}
+.custom-tooltip strong {
+    display: block;
+    color: #c7d2fe;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 3px;
+}
+.custom-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 7px solid transparent;
+    border-top-color: #1e1b4b;
+    filter: drop-shadow(0 2px 2px rgba(15,23,42,0.15));
+}
+
+/* ============ GEO link + Countries modal ============ */
+.geo-link {
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    color: var(--indigo-600);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+}
+.geo-link:hover { color: var(--indigo-500); text-decoration: underline; }
+.geo-link svg { opacity: 0.7; }
+
+.countries-modal { max-width: 760px; }
+.countries-modal .modal-body { padding: 1.5rem; }
+.modal-count {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--indigo-600);
+    background: var(--indigo-50);
+    padding: 2px 8px;
+    border-radius: var(--r-full);
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.country-region { margin-bottom: 1.5rem; }
+.country-region:last-child { margin-bottom: 0; }
+.country-region h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--indigo-600);
+    margin: 0 0 0.625rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+.region-count { color: var(--text-subtle); font-weight: 500; }
+.country-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+.country-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    transition: border-color 0.15s, background 0.15s;
+}
+.country-item:hover {
+    border-color: var(--indigo-500);
+    background: var(--indigo-50);
+}
+.country-flag { font-size: 20px; line-height: 1; }
+.country-name { font-weight: 600; }
+
+@media (max-width: 640px) {
+    .country-grid { grid-template-columns: repeat(2, 1fr); }
+    .countries-modal .modal-body { padding: 1rem; }
+    .custom-tooltip { max-width: 240px; font-size: 11.5px; padding: 0.6rem 0.8rem; }
+}
+@media (max-width: 420px) {
+    .country-grid { grid-template-columns: 1fr; }
+}
 
 /* ============ Footer ============ */
 .site-footer {
