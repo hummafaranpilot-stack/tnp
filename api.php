@@ -26,9 +26,9 @@ try {
         if ($sr <= 0) $sr = next_sr($pdo);
 
         $stmt = $pdo->prepare("INSERT INTO offers
-            (sr, platform, offer_name, image_url, offer_id, category, top_landers,
+            (sr, platform, offer_name, image_url, offer_id, category, top_landers, other_pages,
              affiliate_page_url, links, revshare, cpa, allowed_geos, restriction, traffic_tips, shaver_domain_id)
-            VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers,
+            VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers, :other_pages,
                     :affiliate_page_url, :links, :revshare, :cpa, :allowed_geos, :restriction, :traffic_tips, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
@@ -44,7 +44,7 @@ try {
         if ($id <= 0) throw new RuntimeException('Missing id');
         $stmt = $pdo->prepare("UPDATE offers SET
             sr = :sr, platform = :platform, offer_name = :offer_name, image_url = :image_url,
-            offer_id = :offer_id, category = :category, top_landers = :top_landers,
+            offer_id = :offer_id, category = :category, top_landers = :top_landers, other_pages = :other_pages,
             affiliate_page_url = :affiliate_page_url, links = :links, revshare = :revshare, cpa = :cpa,
             allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips
             WHERE id = :id");
@@ -140,6 +140,8 @@ function read_json(): array {
 function bind(array $d): array {
     $landers = $d['top_landers'] ?? [];
     if (!is_array($landers)) $landers = [];
+    $other_pages = $d['other_pages'] ?? [];
+    if (!is_array($other_pages)) $other_pages = [];
     $links = $d['links'] ?? [];
     if (!is_array($links)) $links = [];
     $tips_raw = $d['traffic_tips'] ?? [];
@@ -170,6 +172,7 @@ function bind(array $d): array {
         ':offer_id' => (string)($d['offer_id'] ?? ''),
         ':category' => (string)($d['category'] ?? ''),
         ':top_landers' => json_encode($landers),
+        ':other_pages' => json_encode($other_pages),
         ':affiliate_page_url' => $aff_url,
         ':links' => json_encode($links),
         ':revshare' => (string)($d['revshare'] ?? ''),

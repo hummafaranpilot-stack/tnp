@@ -555,6 +555,25 @@ foreach ($counts as $p => $fields) {
                 <div id="landersList" class="landers-list"></div>
             </section>
 
+            <!-- Other Pages (Shaver suggestions) -->
+            <section class="form-section section-other">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Other Pages
+                    <span class="field-hint" id="hint_other_pages"></span>
+                </h4>
+
+                <div id="otherPagesList" class="landers-list"></div>
+
+                <div class="other-sugg-head">
+                    <span class="other-sugg-title">Suggestions from Shaver</span>
+                    <span class="other-sugg-sub">✓ to add · ✗ to dismiss · title is editable</span>
+                </div>
+                <div id="otherSuggestionsList" class="other-sugg-list">
+                    <p class="other-sugg-empty">Open this form from a Shaver suggestion, or edit an offer linked to Shaver, to see lander suggestions here.</p>
+                </div>
+            </section>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Offer</button>

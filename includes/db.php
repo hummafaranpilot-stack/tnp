@@ -67,6 +67,12 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN traffic_tips TEXT NULL AFTER restriction");
     }
 
+    // Other pages — secondary landing pages admin adds from Shaver suggestions
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'other_pages'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN other_pages TEXT NULL AFTER top_landers");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (
