@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/db.php';
+require __DIR__ . '/includes/analytics.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -94,6 +95,24 @@ try {
 
     if ($method === 'GET' && $action === 'next_sr') {
         echo json_encode(['sr' => next_sr($pdo)]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'top_landers') {
+        $data = read_json();
+        $domain_id = (int)($data['domain_id'] ?? 0);
+        $result = shaver_fetch_top_landers($domain_id);
+        echo json_encode($result);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'dismiss_suggestion') {
+        $data = read_json();
+        $domain_id = (int)($data['shaver_domain_id'] ?? 0);
+        if ($domain_id <= 0) throw new RuntimeException('Missing shaver_domain_id');
+        $stmt = $pdo->prepare('INSERT IGNORE INTO dismissed_shaver_domains (shaver_domain_id) VALUES (:id)');
+        $stmt->execute([':id' => $domain_id]);
+        echo json_encode(['ok' => true]);
         exit;
     }
 

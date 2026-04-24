@@ -46,6 +46,14 @@ function ensure_schema(PDO $pdo): void {
     if (empty($cols)) {
         $pdo->exec("ALTER TABLE offers ADD COLUMN image_url VARCHAR(500) DEFAULT '' AFTER offer_name");
     }
+
+    // Dismissed Shaver domain suggestions
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (
+        shaver_domain_id INT PRIMARY KEY,
+        dismissed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
     $done = true;
 }
 

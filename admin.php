@@ -28,6 +28,33 @@ $existing_names = [];
 foreach ($offers as $o) {
     $existing_names[strtolower(trim($o['offer_name']))] = true;
 }
+
+// Dismissed Shaver domains (user ne × pe click kiya)
+$dismissed_ids = [];
+try {
+    $rows = $pdo->query('SELECT shaver_domain_id FROM dismissed_shaver_domains')->fetchAll();
+    foreach ($rows as $r) $dismissed_ids[(int)$r['shaver_domain_id']] = true;
+} catch (Throwable $e) { /* table may not exist yet, treat as empty */ }
+
+// Platform defaults — "learn" most-common values per platform
+$platform_defaults = [];
+$counts = [];
+foreach ($offers as $o) {
+    $p = trim($o['platform'] ?? '');
+    if ($p === '') continue;
+    foreach (['revshare', 'cpa', 'allowed_geos', 'restriction', 'category'] as $field) {
+        $val = trim($o[$field] ?? '');
+        if ($val === '') continue;
+        $counts[$p][$field][$val] = ($counts[$p][$field][$val] ?? 0) + 1;
+    }
+}
+foreach ($counts as $p => $fields) {
+    foreach ($fields as $field => $values) {
+        arsort($values);
+        $top_val = array_key_first($values);
+        if ($top_val !== null) $platform_defaults[$p][$field] = $top_val;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -126,9 +153,9 @@ foreach ($offers as $o) {
                 $new_suggestions = [];
                 foreach ($shaver['domains'] as $d) {
                     $label = strtolower(trim($d['label'] ?? ''));
-                    if ($label !== '' && !isset($existing_names[$label])) {
-                        $new_suggestions[] = $d;
-                    }
+                    $dom_id = (int)($d['id'] ?? 0);
+                    if ($label === '' || isset($existing_names[$label]) || isset($dismissed_ids[$dom_id])) continue;
+                    $new_suggestions[] = $d;
                 }
             ?>
             <?php if (!empty($new_suggestions)): ?>
@@ -144,18 +171,23 @@ foreach ($offers as $o) {
             </div>
             <div class="suggest-grid">
                 <?php foreach ($new_suggestions as $d): ?>
-                    <button type="button" class="suggest-card"
-                            data-suggest='<?= h(json_encode(shaver_domain_to_offer($d), JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
-                        <div class="suggest-card-head">
-                            <span class="suggest-label"><?= h($d['label']) ?></span>
-                            <span class="badge badge-slate"><?= h(normalize_platform($d['platform'])) ?></span>
-                        </div>
-                        <span class="suggest-url"><?= h($d['domain_url']) ?></span>
-                        <span class="suggest-cta">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                            Add to directory
-                        </span>
-                    </button>
+                    <div class="suggest-card-wrap" data-shaver-id="<?= h((string)$d['id']) ?>">
+                        <button type="button" class="suggest-dismiss" title="Dismiss forever" onclick="dismissSuggestion(event, this)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                        <button type="button" class="suggest-card"
+                                data-suggest='<?= h(json_encode(shaver_domain_to_offer($d), JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
+                            <div class="suggest-card-head">
+                                <span class="suggest-label"><?= h($d['label']) ?></span>
+                                <span class="badge badge-slate"><?= h(normalize_platform($d['platform'])) ?></span>
+                            </div>
+                            <span class="suggest-url"><?= h($d['domain_url']) ?></span>
+                            <span class="suggest-cta">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add to directory
+                            </span>
+                        </button>
+                    </div>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
@@ -256,13 +288,14 @@ foreach ($offers as $o) {
         <form id="offerForm" class="modal-body" onsubmit="submitForm(event)">
             <input type="hidden" name="id" id="f_id">
             <div class="grid">
-                <div><label>Sr #</label><input type="number" name="sr" id="f_sr" required></div>
-                <div><label>Platform</label>
-                    <select name="platform" id="f_platform">
-                        <option>BuyGoods</option><option>ClickBank</option><option>Other</option>
+                <div><label>Sr # <span class="required">*</span></label><input type="number" name="sr" id="f_sr" required></div>
+                <div>
+                    <label>Platform <span class="required">*</span></label>
+                    <select name="platform" id="f_platform" required>
+                        <option>BuyGoods</option><option>ClickBank</option><option>Digistore24</option><option>MaxWeb</option><option>Other</option>
                     </select>
                 </div>
-                <div class="full"><label>Offer Name</label><input type="text" name="offer_name" id="f_offer_name" required></div>
+                <div class="full"><label>Offer Name <span class="required">*</span></label><input type="text" name="offer_name" id="f_offer_name" required></div>
 
                 <div class="full">
                     <label>Product Image</label>
@@ -284,22 +317,33 @@ foreach ($offers as $o) {
                 </div>
 
                 <div><label>Offer ID / Nickname</label><input type="text" name="offer_id" id="f_offer_id"></div>
-                <div><label>Category</label>
+                <div>
+                    <label>Category <span class="field-hint" id="hint_category"></span></label>
                     <select name="category" id="f_category">
                         <option>Weight Loss</option><option>Male Enhancement</option>
                         <option>Blood Sugar</option><option>Brain Health</option>
                         <option>Joint Pain</option><option>Other</option>
                     </select>
                 </div>
-                <div><label>RevShare</label><input type="text" name="revshare" id="f_revshare" placeholder="e.g. 75%"></div>
-                <div><label>CPA</label><input type="text" name="cpa" id="f_cpa" placeholder="e.g. $170"></div>
-                <div><label>Allowed GEOs</label><input type="text" name="allowed_geos" id="f_allowed_geos" placeholder="e.g. Tier-1"></div>
-                <div><label>Restriction</label>
+                <div>
+                    <label>RevShare <span class="field-hint" id="hint_revshare"></span></label>
+                    <input type="text" name="revshare" id="f_revshare" placeholder="e.g. 75%">
+                </div>
+                <div>
+                    <label>CPA <span class="field-hint" id="hint_cpa"></span></label>
+                    <input type="text" name="cpa" id="f_cpa" placeholder="e.g. $170">
+                </div>
+                <div>
+                    <label>Allowed GEOs <span class="field-hint" id="hint_allowed_geos"></span></label>
+                    <input type="text" name="allowed_geos" id="f_allowed_geos" placeholder="e.g. Tier-1">
+                </div>
+                <div>
+                    <label>Restriction <span class="field-hint" id="hint_restriction"></span></label>
                     <select name="restriction" id="f_restriction"><option>No</option><option>Yes</option></select>
                 </div>
                 <div class="full"><label>Affiliate / Creative Page URL</label><input type="url" name="affiliate_page_url" id="f_affiliate_page_url" placeholder="https://..."></div>
                 <div class="full">
-                    <label>Top Landers</label>
+                    <label>Top Landers <span class="field-hint" id="hint_landers"></span></label>
                     <div class="lander-row">
                         <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
                         <input type="url" id="lander_url" placeholder="https://...">
@@ -316,6 +360,9 @@ foreach ($offers as $o) {
     </div>
 </div>
 
+<script>
+    window.PLATFORM_DEFAULTS = <?= json_encode($platform_defaults, JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+</script>
 <script src="/app.js?v=<?= @filemtime(__DIR__ . '/app.js') ?: time() ?>"></script>
 <script>
     // Live search filter for admin table
