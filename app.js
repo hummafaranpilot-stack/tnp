@@ -149,14 +149,18 @@ function openForm(offer = null) {
 
     // Mark Shaver-sourced fields as prefilled (yellow)
     if (isFromShaver) {
-        if (offer.offer_id) markPrefilled('f_offer_id', 'Auto-filled by Shaver');
-        if (offer.platform) markPrefilled('f_platform', 'Auto-filled by Shaver');
+        // Whichever of offer_name / offer_id was populated by
+        // shaver_domain_to_offer (depends on platform) gets the chip.
+        if (offer.offer_name) markPrefilled('f_offer_name', 'Auto-filled by Shaver');
+        if (offer.offer_id)   markPrefilled('f_offer_id',   'Auto-filled by Shaver');
+        if (offer.platform)   markPrefilled('f_platform',   'Auto-filled by Shaver');
         // Links hint is set later by fetchTopLandersAsync only if a real
         // afftools/affiliate URL is actually found in Shaver traffic.
     }
 
     // Apply platform defaults from past offers (learning)
     applyPlatformDefaults(document.getElementById('f_platform').value, !isEdit);
+    applyPlatformTipDefaults(document.getElementById('f_platform').value, !isEdit);
 
     // Async fetch top landers + affiliate URL for Shaver suggestions
     if (isFromShaver) {
@@ -206,11 +210,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const platformSel = document.getElementById('f_platform');
     if (platformSel) {
         platformSel.addEventListener('change', () => {
-            if (!editingId) applyPlatformDefaults(platformSel.value, true);
+            if (!editingId) {
+                applyPlatformDefaults(platformSel.value, true);
+                applyPlatformTipDefaults(platformSel.value, true);
+            }
             toggleCbUrlField();
         });
     }
 });
+
+function applyPlatformTipDefaults(platform, isNew) {
+    if (!isNew) return;
+    if (trafficTips.length > 0) return; // never overwrite tips the admin already touched
+    const defs = (window.PLATFORM_TIP_DEFAULTS || {})[platform];
+    if (!defs || defs.length === 0) return;
+    trafficTips = defs.map(d => ({ label: d.label, value: d.value }));
+    renderTips();
+    setHint('hint_traffic_tips', 'Auto-filled by Previous Offers');
+}
 
 function toggleCbUrlField() {
     const platform = document.getElementById('f_platform').value;
@@ -359,13 +376,19 @@ function addTip() {
     if (!label || !value) return;
     trafficTips.push({ label, value });
     document.getElementById('tip_input').value = '';
+    clearHint('hint_traffic_tips');
     renderTips();
 }
-function removeTip(i) { trafficTips.splice(i, 1); renderTips(); }
+function removeTip(i) {
+    trafficTips.splice(i, 1);
+    clearHint('hint_traffic_tips');
+    renderTips();
+}
 function moveTip(i, delta) {
     const j = i + delta;
     if (j < 0 || j >= trafficTips.length) return;
     [trafficTips[i], trafficTips[j]] = [trafficTips[j], trafficTips[i]];
+    clearHint('hint_traffic_tips');
     renderTips();
 }
 function renderTips() {

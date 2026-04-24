@@ -60,6 +60,31 @@ foreach ($counts as $p => $fields) {
         if ($top_val !== null) $platform_defaults[$p][$field] = $top_val;
     }
 }
+
+// Traffic tip defaults — per-platform, most-common value per tip label
+$platform_tip_defaults = [];
+$tip_counts = [];
+foreach ($offers as $o) {
+    $p = trim($o['platform'] ?? '');
+    if ($p === '') continue;
+    $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
+    foreach ($tips as $t) {
+        if (!is_array($t)) continue;
+        $lbl = trim((string)($t['label'] ?? ''));
+        $val = trim((string)($t['value'] ?? ''));
+        if ($lbl === '' || $val === '') continue;
+        $tip_counts[$p][$lbl][$val] = ($tip_counts[$p][$lbl][$val] ?? 0) + 1;
+    }
+}
+foreach ($tip_counts as $p => $labels) {
+    foreach ($labels as $lbl => $values) {
+        arsort($values);
+        $top_val = array_key_first($values);
+        if ($top_val !== null) {
+            $platform_tip_defaults[$p][] = ['label' => $lbl, 'value' => $top_val];
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -539,6 +564,7 @@ foreach ($counts as $p => $fields) {
                 <h4 class="section-head-label">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                     Traffic Tips
+                    <span class="field-hint" id="hint_traffic_tips"></span>
                 </h4>
                 <div class="lander-row">
                     <select id="tip_label">
@@ -612,6 +638,7 @@ foreach ($counts as $p => $fields) {
 
 <script>
     window.PLATFORM_DEFAULTS = <?= json_encode($platform_defaults, JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    window.PLATFORM_TIP_DEFAULTS = <?= json_encode($platform_tip_defaults, JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     function showCountries() {
         document.getElementById('countriesModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
