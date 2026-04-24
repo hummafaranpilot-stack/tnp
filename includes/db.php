@@ -61,6 +61,12 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN links TEXT NULL AFTER affiliate_page_url");
     }
 
+    // Traffic tips (bulleted list shown next to each offer)
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'traffic_tips'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN traffic_tips TEXT NULL AFTER restriction");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (

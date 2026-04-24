@@ -240,7 +240,7 @@ foreach ($counts as $p => $fields) {
                                 <th>Links</th>
                                 <th>Commission</th>
                                 <th>GEOs</th>
-                                <th>Restriction</th>
+                                <th>Traffic Tips</th>
                                 <th class="center">Actions</th>
                             </tr>
                         </thead>
@@ -299,7 +299,10 @@ foreach ($counts as $p => $fields) {
                                             <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
                                                class="lander-link"
                                                <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
-                                                <span class="lander-name"><?= h($label) ?></span>
+                                                <span class="lander-name">
+                                                    <?= h($label) ?>
+                                                    <svg class="lander-arrow" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                                </span>
                                                 <?php if ($advice): ?>
                                                     <span class="advice-chip advice-<?= h($type) ?>"><?= h($advice) ?></span>
                                                 <?php endif; ?>
@@ -359,7 +362,24 @@ foreach ($counts as $p => $fields) {
                                         <?= h($o['allowed_geos']) ?>
                                     <?php endif; ?>
                                 </td>
-                                <td class="<?= ($restriction_val === 'Yes') ? 'restr-yes' : 'restr-no' ?>"><?= h($restriction_val) ?></td>
+                                <td>
+                                    <?php
+                                        $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
+                                    ?>
+                                    <?php if (empty($tips)): ?>
+                                        <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <ul class="tip-list">
+                                        <?php foreach ($tips as $t):
+                                            $lbl = is_array($t) ? ($t['label'] ?? '') : '';
+                                            $val = is_array($t) ? ($t['value'] ?? '') : (is_string($t) ? $t : '');
+                                            if ($val === '') continue;
+                                        ?>
+                                            <li><?php if ($lbl): ?><strong><?= h($lbl) ?>:</strong> <?php endif; ?><?= h($val) ?></li>
+                                        <?php endforeach; ?>
+                                        </ul>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="center">
                                     <button class="btn-small btn-edit" onclick="editOffer(this)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -487,6 +507,25 @@ foreach ($counts as $p => $fields) {
                     <button type="button" class="btn btn-primary" onclick="addLink()">+ Add</button>
                 </div>
                 <div id="linksList" class="landers-list"></div>
+            </section>
+
+            <!-- Traffic Tips -->
+            <section class="form-section section-tips">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    Traffic Tips
+                </h4>
+                <div class="lander-row">
+                    <select id="tip_label">
+                        <option value="Restriction">Restriction</option>
+                        <option value="Age">Age</option>
+                        <option value="EPC">EPC</option>
+                        <option value="AOV">AOV</option>
+                    </select>
+                    <input type="text" id="tip_input" placeholder="e.g. 18+, $2.50, US only">
+                    <button type="button" class="btn btn-primary" onclick="addTip()">+ Add</button>
+                </div>
+                <div id="tipsList" class="landers-list"></div>
             </section>
 
             <!-- Top Landers -->

@@ -213,7 +213,7 @@ foreach ($offers as $o) {
                                 <th>Links</th>
                                 <th>Commission</th>
                                 <th>GEOs</th>
-                                <th>Restriction</th>
+                                <th>Traffic Tips</th>
                             </tr>
                         </thead>
                         <tbody id="offersBody">
@@ -275,7 +275,10 @@ foreach ($offers as $o) {
                                             <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
                                                class="lander-link"
                                                <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
-                                                <span class="lander-name"><?= h($label) ?></span>
+                                                <span class="lander-name">
+                                                    <?= h($label) ?>
+                                                    <svg class="lander-arrow" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                                </span>
                                                 <?php if ($advice): ?>
                                                     <span class="advice-chip advice-<?= h($type) ?>"><?= h($advice) ?></span>
                                                 <?php endif; ?>
@@ -335,7 +338,24 @@ foreach ($offers as $o) {
                                         <?= h($o['allowed_geos']) ?>
                                     <?php endif; ?>
                                 </td>
-                                <td class="<?= ($restriction_val === 'Yes') ? 'restr-yes' : 'restr-no' ?>"><?= h($restriction_val) ?></td>
+                                <td>
+                                    <?php
+                                        $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
+                                    ?>
+                                    <?php if (empty($tips)): ?>
+                                        <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <ul class="tip-list">
+                                        <?php foreach ($tips as $t):
+                                            $lbl = is_array($t) ? ($t['label'] ?? '') : '';
+                                            $val = is_array($t) ? ($t['value'] ?? '') : (is_string($t) ? $t : '');
+                                            if ($val === '') continue;
+                                        ?>
+                                            <li><?php if ($lbl): ?><strong><?= h($lbl) ?>:</strong> <?php endif; ?><?= h($val) ?></li>
+                                        <?php endforeach; ?>
+                                        </ul>
+                                    <?php endif; ?>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                         </tbody>

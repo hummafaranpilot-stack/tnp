@@ -1,5 +1,6 @@
 let landers = [];
 let links = [];
+let trafficTips = [];
 let editingId = null;
 let currentShaverDomainId = null; // set when opening form from a Shaver suggestion
 let editingLanderIdx = null;      // index of lander being inline-edited, if any
@@ -108,6 +109,24 @@ function openForm(offer = null) {
         links = [{ title: 'Affiliate Page', url: offer.affiliate_page_url }];
     }
     renderLinks();
+
+    // Traffic tips (list of {label, value})
+    trafficTips = [];
+    if (offer?.traffic_tips) {
+        try {
+            const parsed = typeof offer.traffic_tips === 'string' ? JSON.parse(offer.traffic_tips) : offer.traffic_tips;
+            if (Array.isArray(parsed)) {
+                trafficTips = parsed
+                    .map(t => {
+                        if (t && typeof t === 'object' && t.label) return { label: t.label, value: String(t.value ?? '') };
+                        if (typeof t === 'string' && t.trim() !== '') return { label: 'Note', value: t }; // legacy plain strings
+                        return null;
+                    })
+                    .filter(Boolean);
+            }
+        } catch (_) {}
+    }
+    renderTips();
 
     // Reset prefilled state
     clearAllPrefilled();
@@ -223,6 +242,7 @@ function closeForm() {
     editingId = null;
     landers = [];
     links = [];
+    trafficTips = [];
     clearAllPrefilled();
 }
 
@@ -296,6 +316,49 @@ function adviceDescription(advice) {
     if (a === 'direct-link' || a === 'direct link')     return 'Direct link — the long copy already does the persuasion itself, no prelander needed.';
     if (a === 'vsl')                                    return 'VSL (Video Sales Letter) — best for viewers who prefer to watch videos over reading.';
     return '';
+}
+
+function addTip() {
+    const label = document.getElementById('tip_label').value;
+    const value = document.getElementById('tip_input').value.trim();
+    if (!label || !value) return;
+    trafficTips.push({ label, value });
+    document.getElementById('tip_input').value = '';
+    renderTips();
+}
+function removeTip(i) { trafficTips.splice(i, 1); renderTips(); }
+function moveTip(i, delta) {
+    const j = i + delta;
+    if (j < 0 || j >= trafficTips.length) return;
+    [trafficTips[i], trafficTips[j]] = [trafficTips[j], trafficTips[i]];
+    renderTips();
+}
+function renderTips() {
+    const box = document.getElementById('tipsList');
+    if (!box) return;
+    box.innerHTML = '';
+    trafficTips.forEach((t, i) => {
+        const row = document.createElement('div');
+        row.className = 'lander-item';
+        const upDisabled = i === 0 ? 'disabled' : '';
+        const downDisabled = i === trafficTips.length - 1 ? 'disabled' : '';
+        row.innerHTML = `
+            <div class="lander-reorder">
+                <button type="button" class="reorder-btn" ${upDisabled} onclick="moveTip(${i}, -1)" title="Move up">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <button type="button" class="reorder-btn" ${downDisabled} onclick="moveTip(${i}, 1)" title="Move down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+            <div class="lander-main">
+                <span class="label">${escapeHtml(t.label)}</span>
+                <span class="url">${escapeHtml(t.value)}</span>
+            </div>
+            <button type="button" class="remove" onclick="removeTip(${i})" title="Remove">&times;</button>
+        `;
+        box.appendChild(row);
+    });
 }
 
 function addLink() {
@@ -535,6 +598,7 @@ async function submitForm(e) {
         allowed_geos: document.getElementById('f_allowed_geos').value,
         restriction: document.getElementById('f_restriction').value,
         links: links.map(({ title, url }) => ({ title, url })),
+        traffic_tips: trafficTips.map(({ label, value }) => ({ label, value })),
         top_landers: landers.map(l => {
             const out = { label: l.label, url: l.url };
             if (l.advice) out.advice = l.advice;

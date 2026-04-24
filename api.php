@@ -22,9 +22,9 @@ try {
 
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers,
-             affiliate_page_url, links, revshare, cpa, allowed_geos, restriction, shaver_domain_id)
+             affiliate_page_url, links, revshare, cpa, allowed_geos, restriction, traffic_tips, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers,
-                    :affiliate_page_url, :links, :revshare, :cpa, :allowed_geos, :restriction, :shaver_domain_id)");
+                    :affiliate_page_url, :links, :revshare, :cpa, :allowed_geos, :restriction, :traffic_tips, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
         $params[':shaver_domain_id'] = !empty($data['shaver_domain_id']) ? (int)$data['shaver_domain_id'] : null;
@@ -41,7 +41,7 @@ try {
             sr = :sr, platform = :platform, offer_name = :offer_name, image_url = :image_url,
             offer_id = :offer_id, category = :category, top_landers = :top_landers,
             affiliate_page_url = :affiliate_page_url, links = :links, revshare = :revshare, cpa = :cpa,
-            allowed_geos = :allowed_geos, restriction = :restriction
+            allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips
             WHERE id = :id");
         $params = bind($data);
         $params[':id'] = $id;
@@ -135,6 +135,17 @@ function bind(array $d): array {
     if (!is_array($landers)) $landers = [];
     $links = $d['links'] ?? [];
     if (!is_array($links)) $links = [];
+    $tips_raw = $d['traffic_tips'] ?? [];
+    if (!is_array($tips_raw)) $tips_raw = [];
+    $tips = [];
+    foreach ($tips_raw as $t) {
+        if (is_array($t) && !empty($t['label'])) {
+            $val = trim((string)($t['value'] ?? ''));
+            if ($val !== '') $tips[] = ['label' => (string)$t['label'], 'value' => $val];
+        } elseif (is_string($t) && trim($t) !== '') {
+            $tips[] = ['label' => 'Note', 'value' => trim($t)];
+        }
+    }
     // Keep affiliate_page_url in sync with the first "Affiliate Page" entry
     // (backwards compatibility for code that still reads that column).
     $aff_url = (string)($d['affiliate_page_url'] ?? '');
@@ -158,5 +169,6 @@ function bind(array $d): array {
         ':cpa' => (string)($d['cpa'] ?? ''),
         ':allowed_geos' => (string)($d['allowed_geos'] ?? ''),
         ':restriction' => (string)($d['restriction'] ?? 'No'),
+        ':traffic_tips' => json_encode($tips),
     ];
 }
