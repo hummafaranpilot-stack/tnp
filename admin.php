@@ -234,7 +234,7 @@ foreach ($counts as $p => $fields) {
                         <thead>
                             <tr>
                                 <th>Sr</th>
-                                <th>Product</th>
+                                <th class="product-head">Product</th>
                                 <th>Offer</th>
                                 <th>Top Landers</th>
                                 <th>Links</th>

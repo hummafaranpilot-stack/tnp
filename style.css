@@ -448,16 +448,19 @@ main.page { padding: 2rem 0 4rem; }
     padding-left: 0.05rem;
 }
 
-/* Merged Product cell (image on top, platform badge below) — left-aligned to match header */
+/* Merged Product cell (image on top, platform badge below) — centered with header */
+.offer-table th.product-head,
 .offer-table td.product-cell {
-    text-align: left;
+    text-align: center;
+}
+.offer-table td.product-cell {
     vertical-align: middle;
     padding: 0.9rem 1.25rem;
 }
 .product-cell .thumb,
 .product-cell .thumb-empty {
     display: block;
-    margin: 0 0 0.625rem 0;
+    margin: 0 auto 0.625rem;
 }
 .product-cell .badge { display: inline-block; }
 
