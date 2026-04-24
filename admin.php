@@ -389,94 +389,127 @@ foreach ($counts as $p => $fields) {
         </div>
         <form id="offerForm" class="modal-body" onsubmit="submitForm(event)">
             <input type="hidden" name="id" id="f_id">
-            <div class="grid">
-                <div><label>Sr # <span class="required">*</span></label><input type="number" name="sr" id="f_sr" required></div>
-                <div>
-                    <label>Platform <span class="required">*</span></label>
-                    <select name="platform" id="f_platform" required>
-                        <option>BuyGoods</option><option>ClickBank</option><option>Digistore24</option><option>MaxWeb</option><option>Other</option>
-                    </select>
-                </div>
-                <div class="full"><label>Offer Name <span class="required">*</span></label><input type="text" name="offer_name" id="f_offer_name" required></div>
 
-                <div class="full">
-                    <label>Product Image</label>
-                    <div class="image-tabs">
-                        <button type="button" class="tab active" data-tab="url" onclick="switchImageTab('url')">Paste URL</button>
-                        <button type="button" class="tab" data-tab="upload" onclick="switchImageTab('upload')">Upload File</button>
+            <!-- Basics -->
+            <section class="form-section section-basics">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Basics
+                </h4>
+                <div class="grid">
+                    <div><label>Sr # <span class="required">*</span></label><input type="number" name="sr" id="f_sr" required></div>
+                    <div>
+                        <label>Platform <span class="required">*</span></label>
+                        <select name="platform" id="f_platform" required>
+                            <option>BuyGoods</option><option>ClickBank</option><option>Digistore24</option><option>MaxWeb</option><option>Other</option>
+                        </select>
                     </div>
-                    <div id="imageUrlPane" class="tab-pane">
-                        <input type="url" id="f_image_url" placeholder="https://example.com/image.jpg" oninput="previewImage(this.value)">
-                    </div>
-                    <div id="imageUploadPane" class="tab-pane hidden">
-                        <input type="file" id="f_image_file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="uploadImage(this)">
-                        <p class="hint" id="uploadStatus"></p>
-                    </div>
-                    <div id="imagePreview" class="image-preview hidden">
-                        <img id="previewImg" src="" alt="">
-                        <button type="button" class="remove-img" onclick="clearImage()" title="Remove image">&times;</button>
+                    <div class="full"><label>Offer Name <span class="required">*</span></label><input type="text" name="offer_name" id="f_offer_name" required></div>
+                    <div><label>Offer ID / Nickname</label><input type="text" name="offer_id" id="f_offer_id"></div>
+                    <div>
+                        <label>Category <span class="field-hint" id="hint_category"></span></label>
+                        <select name="category" id="f_category">
+                            <option>Weight Loss</option><option>Male Enhancement</option>
+                            <option>Blood Sugar</option><option>Brain Health</option>
+                            <option>Joint Pain</option><option>Other</option>
+                        </select>
                     </div>
                 </div>
+            </section>
 
-                <div><label>Offer ID / Nickname</label><input type="text" name="offer_id" id="f_offer_id"></div>
-                <div>
-                    <label>Category <span class="field-hint" id="hint_category"></span></label>
-                    <select name="category" id="f_category">
-                        <option>Weight Loss</option><option>Male Enhancement</option>
-                        <option>Blood Sugar</option><option>Brain Health</option>
-                        <option>Joint Pain</option><option>Other</option>
-                    </select>
+            <!-- Product Image -->
+            <section class="form-section section-image">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                    Product Image
+                </h4>
+                <div class="image-tabs">
+                    <button type="button" class="tab active" data-tab="url" onclick="switchImageTab('url')">Paste URL</button>
+                    <button type="button" class="tab" data-tab="upload" onclick="switchImageTab('upload')">Upload File</button>
                 </div>
-                <div>
-                    <label>RevShare <span class="field-hint" id="hint_revshare"></span></label>
-                    <input type="text" name="revshare" id="f_revshare" placeholder="e.g. 75%">
+                <div id="imageUrlPane" class="tab-pane">
+                    <input type="url" id="f_image_url" placeholder="https://example.com/image.jpg" oninput="previewImage(this.value)">
                 </div>
-                <div>
-                    <label>CPA <span class="field-hint" id="hint_cpa"></span></label>
-                    <input type="text" name="cpa" id="f_cpa" placeholder="e.g. $170">
+                <div id="imageUploadPane" class="tab-pane hidden">
+                    <input type="file" id="f_image_file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="uploadImage(this)">
+                    <p class="hint" id="uploadStatus"></p>
                 </div>
-                <div>
-                    <label>Allowed GEOs <span class="field-hint" id="hint_allowed_geos"></span></label>
-                    <select name="allowed_geos" id="f_allowed_geos">
-                        <?php foreach (GEO_OPTIONS as $opt): ?>
-                            <option value="<?= h($opt) ?>"><?= h($opt) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <div id="imagePreview" class="image-preview hidden">
+                    <img id="previewImg" src="" alt="">
+                    <button type="button" class="remove-img" onclick="clearImage()" title="Remove image">&times;</button>
                 </div>
-                <div>
-                    <label>Restriction <span class="field-hint" id="hint_restriction"></span></label>
-                    <select name="restriction" id="f_restriction"><option>No</option><option>Yes</option></select>
-                </div>
-                <div class="full">
-                    <label>Links</label>
-                    <div class="lander-row">
-                        <select id="link_title">
-                            <option value="Affiliate Page">Affiliate Page</option>
-                            <option value="Creatives">Creatives</option>
-                            <option value="Traffic Tips">Traffic Tips</option>
-                            <option value="Ad Copy Swipes">Ad Copy Swipes</option>
-                        </select>
-                        <input type="url" id="link_url" placeholder="https://...">
-                        <button type="button" class="btn btn-primary" onclick="addLink()">+ Add</button>
+            </section>
+
+            <!-- Commission & GEOs -->
+            <section class="form-section section-commission">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Commission & GEOs
+                </h4>
+                <div class="grid">
+                    <div>
+                        <label>RevShare <span class="field-hint" id="hint_revshare"></span></label>
+                        <input type="text" name="revshare" id="f_revshare" placeholder="e.g. 75%">
                     </div>
-                    <div id="linksList" class="landers-list"></div>
-                </div>
-                <div class="full">
-                    <label>Top Landers <span class="field-hint" id="hint_landers"></span></label>
-                    <div class="lander-row">
-                        <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
-                        <input type="url" id="lander_url" placeholder="https://...">
-                        <select id="lander_advice" title="Capsule type">
-                            <option value="">— Capsule (optional) —</option>
-                            <option value="prelander">prelander</option>
-                            <option value="direct-link">direct-link</option>
-                            <option value="VSL">VSL</option>
-                        </select>
-                        <button type="button" class="btn btn-primary" onclick="addLander()">+ Add</button>
+                    <div>
+                        <label>CPA <span class="field-hint" id="hint_cpa"></span></label>
+                        <input type="text" name="cpa" id="f_cpa" placeholder="e.g. $170">
                     </div>
-                    <div id="landersList" class="landers-list"></div>
+                    <div>
+                        <label>Allowed GEOs <span class="field-hint" id="hint_allowed_geos"></span></label>
+                        <select name="allowed_geos" id="f_allowed_geos">
+                            <?php foreach (GEO_OPTIONS as $opt): ?>
+                                <option value="<?= h($opt) ?>"><?= h($opt) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Restriction <span class="field-hint" id="hint_restriction"></span></label>
+                        <select name="restriction" id="f_restriction"><option>No</option><option>Yes</option></select>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            <!-- Links -->
+            <section class="form-section section-links">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Links
+                </h4>
+                <div class="lander-row">
+                    <select id="link_title">
+                        <option value="Affiliate Page">Affiliate Page</option>
+                        <option value="Creatives">Creatives</option>
+                        <option value="Traffic Tips">Traffic Tips</option>
+                        <option value="Ad Copy Swipes">Ad Copy Swipes</option>
+                    </select>
+                    <input type="url" id="link_url" placeholder="https://...">
+                    <button type="button" class="btn btn-primary" onclick="addLink()">+ Add</button>
+                </div>
+                <div id="linksList" class="landers-list"></div>
+            </section>
+
+            <!-- Top Landers -->
+            <section class="form-section section-landers">
+                <h4 class="section-head-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Top Landers
+                    <span class="field-hint" id="hint_landers"></span>
+                </h4>
+                <div class="lander-row">
+                    <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
+                    <input type="url" id="lander_url" placeholder="https://...">
+                    <select id="lander_advice" title="Capsule type">
+                        <option value="">— Capsule (optional) —</option>
+                        <option value="prelander">prelander</option>
+                        <option value="direct-link">direct-link</option>
+                        <option value="VSL">VSL</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" onclick="addLander()">+ Add</button>
+                </div>
+                <div id="landersList" class="landers-list"></div>
+            </section>
+
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" onclick="closeForm()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Offer</button>

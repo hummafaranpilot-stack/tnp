@@ -79,7 +79,8 @@ function shaver_domain_to_offer(array $d): array {
         'sr'                 => 0, // server will auto-assign
         'offer_name'         => $d['label'] ?? '',
         'platform'           => normalize_platform($d['platform'] ?? ''),
-        'affiliate_page_url' => $url,
+        'affiliate_page_url' => $url, // legacy field, still populated for safety
+        'links'              => $url !== '' ? [['title' => 'Affiliate Page', 'url' => $url]] : [],
         'offer_id'           => '',
         'category'           => '',
         'revshare'           => '',
