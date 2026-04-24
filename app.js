@@ -289,7 +289,7 @@ function moveLander(i, delta) {
 function deriveLanderType(url) {
     const lower = (url || '').toLowerCase();
     if (/\/(dtc\d*)(\/|$)/.test(lower))   return { type: 'dtc',   advice: 'prelander' };
-    if (/\/(long\d*)(\/|$)/.test(lower))  return { type: 'long',  advice: 'direct-link' };
+    if (/\/(long\d*|best\d*)(\/|$)/.test(lower))  return { type: 'long',  advice: 'direct-link' };
     if (/\/(short\d*)(\/|$)/.test(lower)) return { type: 'short', advice: 'prelander' };
     return { type: 'other', advice: '' };
 }

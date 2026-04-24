@@ -225,7 +225,7 @@ function lander_info_from_url(string $url): array {
     if (preg_match('#/(dtc\d*)(?:/|$)#', $lower, $m)) {
         return ['label' => strtoupper($m[1]) . ' Page', 'type' => 'dtc', 'advice' => 'prelander'];
     }
-    if (preg_match('#/(long\d*)(?:/|$)#', $lower, $m)) {
+    if (preg_match('#/(long\d*|best\d*)(?:/|$)#', $lower, $m)) {
         return ['label' => ucfirst($m[1]) . ' VSL', 'type' => 'long', 'advice' => 'direct-link'];
     }
     if (preg_match('#/(short\d*)(?:/|$)#', $lower, $m)) {
