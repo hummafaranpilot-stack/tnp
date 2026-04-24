@@ -356,6 +356,19 @@ async function uploadImage(input) {
     const file = input.files?.[0];
     if (!file) return;
     const status = document.getElementById('uploadStatus');
+
+    // Client-side size check — 5 MB matches the server-side guard in api.php.
+    // "Failed to fetch" in the browser is usually PHP dropping the request
+    // because the upload exceeded post_max_size; catch it here with a clear message.
+    const MAX_MB = 10;
+    if (file.size > MAX_MB * 1024 * 1024) {
+        const actual = (file.size / (1024 * 1024)).toFixed(2);
+        status.textContent = `Image is ${actual} MB — please compress it below ${MAX_MB} MB (try tinypng.com) or paste a URL instead.`;
+        status.className = 'hint error';
+        input.value = '';
+        return;
+    }
+
     status.textContent = 'Uploading…';
     status.className = 'hint';
 
@@ -363,7 +376,15 @@ async function uploadImage(input) {
     fd.append('image', file);
     try {
         const res = await fetch('/api.php?action=upload', { method: 'POST', body: fd });
-        const result = await res.json();
+        // Server returned something but couldn't parse as JSON → show raw status
+        let result;
+        try {
+            result = await res.json();
+        } catch (_) {
+            status.textContent = `Upload failed: server returned HTTP ${res.status}. Try a smaller image.`;
+            status.className = 'hint error';
+            return;
+        }
         if (result.ok && result.url) {
             document.getElementById('f_image_url').value = result.url;
             showPreview(result.url);
@@ -374,7 +395,13 @@ async function uploadImage(input) {
             status.className = 'hint error';
         }
     } catch (e) {
-        status.textContent = 'Upload failed: ' + e.message;
+        // TypeError "Failed to fetch" = connection never completed.
+        // On Hostinger this almost always means the file exceeded PHP's
+        // post_max_size / upload_max_filesize (often 8-10 MB by default).
+        const hint = (e && e.message && /fetch/i.test(e.message))
+            ? 'server rejected the request (file may be too large). Try compressing the image or pasting a URL.'
+            : e.message;
+        status.textContent = 'Upload failed: ' + hint;
         status.className = 'hint error';
     }
 }

@@ -76,8 +76,8 @@ try {
             throw new RuntimeException('No file uploaded or upload error');
         }
         $file = $_FILES['image'];
-        if ($file['size'] > 5 * 1024 * 1024) {
-            throw new RuntimeException('File too large (max 5 MB)');
+        if ($file['size'] > 10 * 1024 * 1024) {
+            throw new RuntimeException('File too large (max 10 MB)');
         }
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($file['tmp_name']);
