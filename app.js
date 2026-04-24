@@ -288,10 +288,32 @@ function moveLander(i, delta) {
 
 function deriveLanderType(url) {
     const lower = (url || '').toLowerCase();
-    if (/\/(dtc\d*)(\/|$)/.test(lower))   return { type: 'dtc',   advice: 'prelander' };
-    if (/\/(long\d*|best\d*)(\/|$)/.test(lower))  return { type: 'long',  advice: 'direct-link' };
-    if (/\/(short\d*)(\/|$)/.test(lower)) return { type: 'short', advice: 'prelander' };
-    return { type: 'other', advice: '' };
+    let m;
+    if ((m = lower.match(/\/dtc(\d*)(\/|$)/))) {
+        return {
+            label: 'DTC' + m[1],
+            type: 'dtc',
+            advice: 'prelander',
+            description: 'Direct-to-consumer page with pricing cards and minimal content. Best paired with a prelander — the prelander warms the customer up, then they land here ready to pick a pack and buy.',
+        };
+    }
+    if ((m = lower.match(/\/(long|best)(\d*)(\/|$)/))) {
+        return {
+            label: m[1].charAt(0).toUpperCase() + m[1].slice(1) + ' TSL' + m[2],
+            type: 'long',
+            advice: 'direct-link',
+            description: 'Long-form sales page (Text Sales Letter) with full copy, graphics, and videos. It already does the "brainwashing" on its own — no prelander needed. Direct-link your traffic straight here.',
+        };
+    }
+    if ((m = lower.match(/\/short(\d*)(\/|$)/))) {
+        return {
+            label: 'Short TSL' + m[1],
+            type: 'short',
+            advice: 'prelander',
+            description: 'Medium-length page — lighter copy than a full TSL. Works best with a prelander that hooks the reader first, so cold traffic gets warmed up before landing here.',
+        };
+    }
+    return { label: '', type: 'other', advice: '', description: '' };
 }
 
 function renderLanders() {
@@ -301,10 +323,14 @@ function renderLanders() {
         const row = document.createElement('div');
         row.className = 'lander-item' + (l.prefilled ? ' prefilled' : '');
         const derived = deriveLanderType(l.url);
-        const type = l.type || derived.type;
-        const advice = l.advice || derived.advice;
+        const label = derived.label || l.label || 'Lander';
+        const type = derived.type !== 'other' ? derived.type : (l.type || 'other');
+        const advice = derived.advice || l.advice || '';
+        const description = derived.description || '';
         const visitsBadge = l.visits ? `<span class="visits-tag">${l.visits} visits</span>` : '';
-        const adviceChip = advice ? `<span class="advice-chip advice-${type}">${escapeHtml(advice)}</span>` : '';
+        const adviceChip = advice
+            ? `<span class="advice-chip advice-${type}"${description ? ` title="${escapeHtml(description)}"` : ''}>${escapeHtml(advice)}</span>`
+            : '';
         const upDisabled = i === 0 ? 'disabled' : '';
         const downDisabled = i === landers.length - 1 ? 'disabled' : '';
         row.innerHTML = `
@@ -317,7 +343,7 @@ function renderLanders() {
                 </button>
             </div>
             <div class="lander-main">
-                <span class="label">${escapeHtml(l.label)}${adviceChip}${visitsBadge}</span>
+                <span class="label">${escapeHtml(label)}${adviceChip}${visitsBadge}</span>
                 <span class="url">${escapeHtml(l.url)}</span>
             </div>
             <button type="button" class="remove" onclick="removeLander(${i})" title="Remove">&times;</button>

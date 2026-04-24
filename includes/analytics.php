@@ -206,35 +206,56 @@ function normalize_landing_url(string $url): string {
 }
 
 /**
- * Classify a landing URL by keywords in the path. Returns a human
- * label, a type slug, and our recommendation on whether it needs
- * a prelander.
+ * Classify a landing URL by keywords in the path. Returns a clean
+ * display label, a type slug, the short advice, and a longer
+ * description for hover tooltips.
  *
  *   short* → medium-length page, pair with a prelander
- *   long*  → long VSL; can direct-link, no prelander needed
+ *   long*  → long TSL; can direct-link, no prelander needed
+ *   best*  → long-form "best" variant; treated the same as long
  *   dtc*   → direct-to-consumer pricing page, pair with a prelander
  *
- * @return array{label: string, type: string, advice: string}
+ * @return array{label: string, type: string, advice: string, description: string}
  */
 function lander_info_from_url(string $url): array {
     $path = parse_url($url, PHP_URL_PATH) ?? '/';
     $lower = strtolower($path);
 
-    // Check most-specific keywords first. Suffix digits (long2, long4) are
-    // kept so variants stay visually distinct in the list.
-    if (preg_match('#/(dtc\d*)(?:/|$)#', $lower, $m)) {
-        return ['label' => strtoupper($m[1]) . ' Page', 'type' => 'dtc', 'advice' => 'prelander'];
+    if (preg_match('#/dtc(\d*)(?:/|$)#', $lower, $m)) {
+        return [
+            'label'       => 'DTC' . $m[1],
+            'type'        => 'dtc',
+            'advice'      => 'prelander',
+            'description' => 'Direct-to-consumer page with pricing cards and minimal content. Best paired with a prelander — the prelander warms the customer up, then they land here ready to pick a pack and buy.',
+        ];
     }
-    if (preg_match('#/(long\d*|best\d*)(?:/|$)#', $lower, $m)) {
-        return ['label' => ucfirst($m[1]) . ' VSL', 'type' => 'long', 'advice' => 'direct-link'];
+    if (preg_match('#/(long|best)(\d*)(?:/|$)#', $lower, $m)) {
+        return [
+            'label'       => ucfirst($m[1]) . ' TSL' . $m[2],
+            'type'        => 'long',
+            'advice'      => 'direct-link',
+            'description' => 'Long-form sales page (Text Sales Letter) with full copy, graphics, and videos. It already does the "brainwashing" on its own — no prelander needed. Direct-link your traffic straight here.',
+        ];
     }
-    if (preg_match('#/(short\d*)(?:/|$)#', $lower, $m)) {
-        return ['label' => ucfirst($m[1]) . ' Lander', 'type' => 'short', 'advice' => 'prelander'];
+    if (preg_match('#/short(\d*)(?:/|$)#', $lower, $m)) {
+        return [
+            'label'       => 'Short TSL' . $m[1],
+            'type'        => 'short',
+            'advice'      => 'prelander',
+            'description' => 'Medium-length page — lighter copy than a full TSL. Works best with a prelander that hooks the reader first, so cold traffic gets warmed up before landing here.',
+        ];
     }
 
     // Fallback: pretty-print the path
     $clean = trim($path, '/');
-    if ($clean === '') return ['label' => 'Main Lander', 'type' => 'other', 'advice' => ''];
+    if ($clean === '') {
+        return ['label' => 'Main Lander', 'type' => 'other', 'advice' => '', 'description' => ''];
+    }
     $parts = array_map('ucfirst', array_filter(explode('/', $clean)));
-    return ['label' => implode(' / ', $parts) ?: 'Lander', 'type' => 'other', 'advice' => ''];
+    return [
+        'label'       => implode(' / ', $parts) ?: 'Lander',
+        'type'        => 'other',
+        'advice'      => '',
+        'description' => '',
+    ];
 }

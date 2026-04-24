@@ -1,6 +1,7 @@
 <?php
 require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/auth.php';
+require __DIR__ . '/includes/analytics.php';
 
 $offers = [];
 $load_error = '';
@@ -268,8 +269,24 @@ foreach ($offers as $o) {
                                         <span class="muted">—</span>
                                     <?php else: ?>
                                         <div class="landers">
-                                        <?php foreach ($landers as $l): ?>
-                                            <a href="<?= h($l['url'] ?? '#') ?>" target="_blank" rel="noopener noreferrer"><?= h($l['label'] ?? 'Lander') ?></a>
+                                        <?php foreach ($landers as $l):
+                                            $lurl  = $l['url'] ?? '#';
+                                            $info  = lander_info_from_url($lurl);
+                                            $label = $info['type'] !== 'other'
+                                                ? $info['label']
+                                                : ($l['label'] ?? $info['label']);
+                                            $tip   = $info['description']
+                                                ? $info['label'] . ' — ' . $info['description']
+                                                : '';
+                                        ?>
+                                            <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
+                                               class="lander-link"
+                                               <?= $tip ? 'title="' . h($tip) . '"' : '' ?>>
+                                                <span class="lander-name"><?= h($label) ?></span>
+                                                <?php if ($info['advice']): ?>
+                                                    <span class="advice-chip advice-<?= h($info['type']) ?>"><?= h($info['advice']) ?></span>
+                                                <?php endif; ?>
+                                            </a>
                                         <?php endforeach; ?>
                                         </div>
                                     <?php endif; ?>
