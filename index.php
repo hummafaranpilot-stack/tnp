@@ -228,9 +228,7 @@ foreach ($offers as $o) {
                                 <th>Sr</th>
                                 <th>Image</th>
                                 <th>Platform</th>
-                                <th>Offer Name</th>
-                                <th>Offer ID</th>
-                                <th>Category</th>
+                                <th>Offer</th>
                                 <th>Top Landers</th>
                                 <th>Affiliate Page</th>
                                 <th>RevShare</th>
@@ -262,9 +260,15 @@ foreach ($offers as $o) {
                                     <?php endif; ?>
                                 </td>
                                 <td><span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span></td>
-                                <td class="name"><?= h($o['offer_name']) ?></td>
-                                <td class="muted"><?= h($o['offer_id']) ?></td>
-                                <td><span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span></td>
+                                <td class="offer-cell">
+                                    <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php if (!empty($o['offer_id'])): ?>
+                                        <span class="offer-id">Offer ID: <?= h($o['offer_id']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($o['category'])): ?>
+                                        <span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span>
+                                    <?php endif; ?>
+                                </td>
                                 <td>
                                     <?php if (empty($landers)): ?>
                                         <span class="muted">—</span>
