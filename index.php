@@ -13,25 +13,6 @@ try {
     $load_error = 'Unable to load offers right now. Please try again later.';
 }
 
-function platform_class(string $p): string {
-    return match ($p) {
-        'BuyGoods'  => 'badge badge-blue',
-        'ClickBank' => 'badge badge-gray',
-        default     => 'badge badge-slate',
-    };
-}
-
-function category_class(string $c): string {
-    return match ($c) {
-        'Weight Loss'      => 'pill pill-green',
-        'Male Enhancement' => 'pill pill-maroon',
-        'Blood Sugar'      => 'pill pill-orange',
-        'Brain Health'     => 'pill pill-purple',
-        'Joint Pain'       => 'pill pill-yellow',
-        default            => 'pill pill-slate',
-    };
-}
-
 // Extract unique filter values
 $categories = [];
 $platforms  = [];

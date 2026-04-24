@@ -33,3 +33,24 @@ function h(?string $s): string {
 function is_transparent_image(string $url): bool {
     return (bool) preg_match('/\.(png|webp|svg)(\?|#|$)/i', $url);
 }
+
+function platform_class(string $p): string {
+    return match ($p) {
+        'BuyGoods'    => 'badge badge-blue',
+        'ClickBank'   => 'badge badge-gray',
+        'Digistore24' => 'badge badge-slate',
+        'MaxWeb'      => 'badge badge-slate',
+        default       => 'badge badge-slate',
+    };
+}
+
+function category_class(string $c): string {
+    return match ($c) {
+        'Weight Loss'      => 'pill pill-green',
+        'Male Enhancement' => 'pill pill-maroon',
+        'Blood Sugar'      => 'pill pill-orange',
+        'Brain Health'     => 'pill pill-purple',
+        'Joint Pain'       => 'pill pill-yellow',
+        default            => 'pill pill-slate',
+    };
+}

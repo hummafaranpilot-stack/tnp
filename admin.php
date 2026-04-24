@@ -236,11 +236,13 @@ foreach ($counts as $p => $fields) {
                                 <th>Sr</th>
                                 <th>Image</th>
                                 <th>Platform</th>
-                                <th>Offer Name</th>
-                                <th>Category</th>
+                                <th>Offer</th>
+                                <th>Top Landers</th>
+                                <th>Links</th>
                                 <th>RevShare</th>
                                 <th>CPA</th>
                                 <th>GEOs</th>
+                                <th>Restriction</th>
                                 <th class="center">Actions</th>
                             </tr>
                         </thead>
@@ -250,6 +252,8 @@ foreach ($counts as $p => $fields) {
                                 $o['offer_name'], $o['offer_id'], $o['platform'],
                                 $o['category'], $o['allowed_geos']
                             ]));
+                            $stored_landers = json_decode($o['top_landers'] ?? '[]', true) ?: [];
+                            $restriction_val = $o['restriction'] ?: 'No';
                         ?>
                             <tr data-id="<?= h((string)$o['id']) ?>" data-search="<?= h($search_text) ?>" data-offer='<?= h(json_encode($o, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
                                 <td class="sr"><?= h((string)$o['sr']) ?></td>
@@ -260,12 +264,72 @@ foreach ($counts as $p => $fields) {
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>
                                 </td>
-                                <td><span class="badge badge-slate"><?= h($o['platform']) ?></span></td>
-                                <td class="name"><?= h($o['offer_name']) ?></td>
-                                <td><span class="pill pill-slate"><?= h($o['category']) ?></span></td>
+                                <td><span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span></td>
+                                <td class="offer-cell">
+                                    <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php if (!empty($o['offer_id'])): ?>
+                                        <span class="offer-id">Offer ID: <?= h($o['offer_id']) ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($o['category'])): ?>
+                                        <span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (empty($stored_landers)): ?>
+                                        <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <div class="landers">
+                                        <?php foreach ($stored_landers as $l):
+                                            $lurl    = $l['url'] ?? '#';
+                                            $info    = lander_info_from_url($lurl);
+                                            $hasMan  = !empty($l['advice']);
+                                            if ($hasMan) {
+                                                $label  = $l['label'] ?? $info['label'];
+                                                $type   = $l['type'] ?? 'custom';
+                                                $advice = $l['advice'];
+                                                $tip    = '';
+                                            } else {
+                                                $label  = $info['type'] !== 'other' ? $info['label'] : ($l['label'] ?? $info['label']);
+                                                $type   = $info['type'];
+                                                $advice = $info['advice'];
+                                                $tip    = $info['description'] ? $info['label'] . ' — ' . $info['description'] : '';
+                                            }
+                                        ?>
+                                            <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
+                                               class="lander-link"
+                                               <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
+                                                <span class="lander-name"><?= h($label) ?></span>
+                                                <?php if ($advice): ?>
+                                                    <span class="advice-chip advice-<?= h($type) ?>"><?= h($advice) ?></span>
+                                                <?php endif; ?>
+                                            </a>
+                                        <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($o['affiliate_page_url'])): ?>
+                                        <a class="link" href="<?= h($o['affiliate_page_url']) ?>" target="_blank" rel="noopener noreferrer">
+                                            Affiliate Page
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="muted">—</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="rev"><?= h($o['revshare']) ?></td>
                                 <td><?= h($o['cpa']) ?></td>
-                                <td class="muted"><?= h($o['allowed_geos']) ?></td>
+                                <td class="muted">
+                                    <?php if ($o['allowed_geos'] === 'Tier-1 (39 Countries)'): ?>
+                                        <button type="button" class="geo-link" onclick="showCountries()">
+                                            Tier-1 (39 Countries)
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                        </button>
+                                    <?php else: ?>
+                                        <?= h($o['allowed_geos']) ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="<?= ($restriction_val === 'Yes') ? 'restr-yes' : 'restr-no' ?>"><?= h($restriction_val) ?></td>
                                 <td class="center">
                                     <button class="btn-small btn-edit" onclick="editOffer(this)">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
@@ -373,8 +437,44 @@ foreach ($counts as $p => $fields) {
     </div>
 </div>
 
+<!-- Tier-1 countries modal -->
+<div id="countriesModal" class="modal hidden" onclick="if(event.target===this) hideCountries()">
+    <div class="modal-card countries-modal">
+        <div class="modal-header">
+            <h3>Tier-1 Countries <span class="modal-count">39 total</span></h3>
+            <button class="modal-close" onclick="hideCountries()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <?php foreach (TIER1_COUNTRIES as $region => $countries_in_region): ?>
+                <div class="country-region">
+                    <h4><?= h($region) ?> <span class="region-count">(<?= count($countries_in_region) ?>)</span></h4>
+                    <div class="country-grid">
+                        <?php foreach ($countries_in_region as $c): ?>
+                            <div class="country-item">
+                                <span class="country-flag"><?= $c['flag'] ?></span>
+                                <span class="country-name"><?= h($c['name']) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+
 <script>
     window.PLATFORM_DEFAULTS = <?= json_encode($platform_defaults, JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
+    function showCountries() {
+        document.getElementById('countriesModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function hideCountries() {
+        document.getElementById('countriesModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') hideCountries();
+    });
 </script>
 <script src="/app.js?v=<?= @filemtime(__DIR__ . '/app.js') ?: time() ?>"></script>
 <script>
