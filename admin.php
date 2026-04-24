@@ -31,7 +31,7 @@ foreach ($offers as $o) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/style.css?v=<?= @filemtime(__DIR__ . '/style.css') ?: time() ?>">
 </head>
 <body>
 <div class="admin-shell">
@@ -260,7 +260,7 @@ foreach ($offers as $o) {
     </div>
 </div>
 
-<script src="/app.js"></script>
+<script src="/app.js?v=<?= @filemtime(__DIR__ . '/app.js') ?: time() ?>"></script>
 <script>
     // Live search filter for admin table
     const search = document.getElementById('adminSearch');
