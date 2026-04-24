@@ -1297,26 +1297,35 @@ main.page { padding: 2rem 0 4rem; }
     gap: 0.5rem;
     margin-bottom: 0.5rem;
     flex-wrap: wrap;
+    align-items: stretch;
 }
-.lander-row input {
+.lander-row input,
+.lander-row select {
     padding: 0.5rem 0.75rem;
     border: 1px solid var(--border);
     border-radius: var(--r-md);
     font-size: 13px;
     font-family: inherit;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
 }
-.lander-row #lander_label { flex: 1 1 140px; min-width: 120px; }
-.lander-row #lander_url   { flex: 2 1 220px; min-width: 160px; }
-.lander-row #lander_advice {
-    flex: 0 1 150px;
-    min-width: 120px;
-    background: #fffbeb;
-    border-color: #fde68a;
-    color: #78350f;
-    font-weight: 500;
+.lander-row input:focus,
+.lander-row select:focus {
+    border-color: var(--indigo-500);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
 }
-.lander-row #lander_advice::placeholder { color: #a16207; opacity: 0.7; }
-.lander-row button { padding: 0.5rem 0.75rem; flex: 0 0 auto; }
+.lander-row select { cursor: pointer; padding-right: 1.75rem; }
+
+.lander-row #lander_label   { flex: 1 1 140px; min-width: 120px; }
+.lander-row #lander_url     { flex: 2 1 220px; min-width: 160px; }
+.lander-row #lander_advice  { flex: 0 1 190px; min-width: 170px; }
+
+.lander-row #link_title     { flex: 0 0 180px; min-width: 160px; }
+.lander-row #link_url       { flex: 1 1 260px; min-width: 200px; }
+
+.lander-row button { padding: 0.5rem 0.875rem; flex: 0 0 auto; white-space: nowrap; }
 
 .landers-list { display: flex; flex-direction: column; gap: 0.35rem; }
 .lander-item {
@@ -1607,6 +1616,25 @@ main.page { padding: 2rem 0 4rem; }
 }
 
 .tab-pane.hidden { display: none; }
+
+.tab-pane input[type="url"],
+#f_image_url {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-size: 13px;
+    font-family: inherit;
+    background: #fff;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tab-pane input[type="url"]:focus,
+#f_image_url:focus {
+    border-color: var(--indigo-500);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+}
 
 .hint {
     font-size: 11px;
