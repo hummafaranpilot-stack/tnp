@@ -430,6 +430,63 @@ main.page { padding: 2rem 0 4rem; }
 .pill-yellow  { background: #fffbeb; color: #92400e; border-color: #fde68a; }
 .pill-slate   { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
 
+/* ============ Suggestion cards (Shaver) ============ */
+.suggest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+}
+.suggest-card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 0.875rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.suggest-card:hover {
+    border-color: var(--indigo-500);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12), var(--shadow-sm);
+}
+.suggest-card:active { transform: scale(0.99); }
+.suggest-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.suggest-label {
+    font-weight: 700;
+    color: var(--text);
+    font-size: 14px;
+    letter-spacing: -0.01em;
+}
+.suggest-url {
+    font-size: 12px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+}
+.suggest-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--indigo-600);
+    margin-top: 0.25rem;
+}
+.suggest-card:hover .suggest-cta { color: var(--indigo-500); }
+
 /* ============ Thumbnail ============ */
 .thumb {
     display: inline-block;

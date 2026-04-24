@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/auth.php';
 require_login();
 require __DIR__ . '/includes/db.php';
+require __DIR__ . '/includes/analytics.php';
 
 $offers = [];
 $next_sr_val = 1;
@@ -19,6 +20,13 @@ $unique_platforms = count(array_unique(array_filter(array_column($offers, 'platf
 $with_images = 0;
 foreach ($offers as $o) {
     if (!empty($o['image_url'])) $with_images++;
+}
+
+// Shaver analytics: fetch active domain suggestions
+$shaver = shaver_fetch_domains();
+$existing_names = [];
+foreach ($offers as $o) {
+    $existing_names[strtolower(trim($o['offer_name']))] = true;
 }
 ?>
 <!DOCTYPE html>
@@ -111,6 +119,54 @@ foreach ($offers as $o) {
                 <p class="stat-value"><?= $with_images ?></p>
             </div>
         </div>
+
+        <!-- Suggestions from Shaver -->
+        <?php if ($shaver['ok'] && !empty($shaver['domains'])): ?>
+            <?php
+                $new_suggestions = [];
+                foreach ($shaver['domains'] as $d) {
+                    $label = strtolower(trim($d['label'] ?? ''));
+                    if ($label !== '' && !isset($existing_names[$label])) {
+                        $new_suggestions[] = $d;
+                    }
+                }
+            ?>
+            <?php if (!empty($new_suggestions)): ?>
+            <div class="section-head" style="margin-top: 2rem;">
+                <div>
+                    <h2 class="section-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; color: var(--indigo-500);"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        Suggestions from Shaver
+                        <span class="count">(<?= count($new_suggestions) ?> new)</span>
+                    </h2>
+                    <p class="subtitle" style="margin-top: 0.25rem;">Active domains not yet in this directory — click any to pre-fill the form.</p>
+                </div>
+            </div>
+            <div class="suggest-grid">
+                <?php foreach ($new_suggestions as $d): ?>
+                    <button type="button" class="suggest-card"
+                            data-suggest='<?= h(json_encode(shaver_domain_to_offer($d), JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
+                        <div class="suggest-card-head">
+                            <span class="suggest-label"><?= h($d['label']) ?></span>
+                            <span class="badge badge-slate"><?= h(normalize_platform($d['platform'])) ?></span>
+                        </div>
+                        <span class="suggest-url"><?= h($d['domain_url']) ?></span>
+                        <span class="suggest-cta">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add to directory
+                        </span>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        <?php elseif (!$shaver['ok'] && ($shaver['error'] ?? '') !== 'not_configured'): ?>
+            <div class="section-head" style="margin-top: 2rem;">
+                <h2 class="section-title">Suggestions from Shaver</h2>
+            </div>
+            <div class="error-block">
+                Could not load Shaver suggestions: <?= h((string)($shaver['error'] ?? 'unknown')) ?>.
+            </div>
+        <?php endif; ?>
 
         <!-- Table -->
         <div class="section-head" style="margin-top: 2rem;">
@@ -273,6 +329,18 @@ foreach ($offers as $o) {
             });
         });
     }
+
+    // Shaver suggestion click → pre-fill Add Offer modal
+    document.querySelectorAll('.suggest-card').forEach(card => {
+        card.addEventListener('click', () => {
+            try {
+                const offer = JSON.parse(card.dataset.suggest);
+                openForm(offer);
+            } catch (e) {
+                console.error('Failed to parse suggestion', e);
+            }
+        });
+    });
 </script>
 </body>
 </html>

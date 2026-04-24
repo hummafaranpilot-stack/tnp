@@ -6,20 +6,36 @@ function getNextSr() {
     return el ? Number(el.dataset.nextSr) || 1 : 1;
 }
 
+function ensureSelectOption(selectId, value) {
+    const select = document.getElementById(selectId);
+    if (!select || !value) return;
+    if (![...select.options].some(o => o.value === value)) {
+        const opt = document.createElement('option');
+        opt.value = value;
+        opt.textContent = value;
+        select.appendChild(opt);
+    }
+}
+
 function openForm(offer = null) {
-    editingId = offer ? offer.id : null;
-    document.getElementById('modalTitle').textContent = offer ? 'Edit Offer' : 'Add New Offer';
-    document.getElementById('f_id').value = offer?.id ?? '';
-    document.getElementById('f_sr').value = offer?.sr ?? getNextSr();
-    document.getElementById('f_platform').value = offer?.platform ?? 'BuyGoods';
-    document.getElementById('f_offer_name').value = offer?.offer_name ?? '';
-    document.getElementById('f_offer_id').value = offer?.offer_id ?? '';
-    document.getElementById('f_category').value = offer?.category ?? 'Weight Loss';
-    document.getElementById('f_revshare').value = offer?.revshare ?? '';
-    document.getElementById('f_cpa').value = offer?.cpa ?? '';
-    document.getElementById('f_allowed_geos').value = offer?.allowed_geos ?? 'Tier-1';
-    document.getElementById('f_restriction').value = offer?.restriction ?? 'No';
-    document.getElementById('f_affiliate_page_url').value = offer?.affiliate_page_url ?? '';
+    const isEdit = offer && offer.id;
+    editingId = isEdit ? offer.id : null;
+    document.getElementById('modalTitle').textContent = isEdit ? 'Edit Offer' : 'Add New Offer';
+    document.getElementById('f_id').value = isEdit ? offer.id : '';
+    // sr: edit uses existing; create/suggestion uses next_sr when sr is 0/empty
+    document.getElementById('f_sr').value = (offer?.sr && offer.sr > 0) ? offer.sr : getNextSr();
+    // Platform/Category may come from Shaver with values not in the dropdown — add on the fly
+    ensureSelectOption('f_platform', offer?.platform || '');
+    ensureSelectOption('f_category', offer?.category || '');
+    document.getElementById('f_platform').value = offer?.platform || 'BuyGoods';
+    document.getElementById('f_offer_name').value = offer?.offer_name || '';
+    document.getElementById('f_offer_id').value = offer?.offer_id || '';
+    document.getElementById('f_category').value = offer?.category || 'Weight Loss';
+    document.getElementById('f_revshare').value = offer?.revshare || '';
+    document.getElementById('f_cpa').value = offer?.cpa || '';
+    document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1';
+    document.getElementById('f_restriction').value = offer?.restriction || 'No';
+    document.getElementById('f_affiliate_page_url').value = offer?.affiliate_page_url || '';
 
     // Image
     const imgUrl = offer?.image_url ?? '';
