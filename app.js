@@ -138,7 +138,8 @@ function openForm(offer = null) {
     if (isFromShaver) {
         if (offer.offer_id) markPrefilled('f_offer_id', 'Auto-filled by Shaver');
         if (offer.platform) markPrefilled('f_platform', 'Auto-filled by Shaver');
-        if (links.length > 0) setHint('hint_links', 'Auto-filled by Shaver');
+        // Links hint is set later by fetchTopLandersAsync only if a real
+        // afftools/affiliate URL is actually found in Shaver traffic.
     }
 
     // Apply platform defaults from past offers (learning)
@@ -212,6 +213,7 @@ async function fetchTopLandersAsync(domain_id) {
             return;
         }
         // Affiliate URL detected from traffic (contains "afftools"/"affiliate")
+        // If none is found, the Links field stays empty — admin can add manually.
         if (result.affiliate_url) {
             const existing = links.find(l => l.title === 'Affiliate Page');
             if (existing) {
@@ -220,6 +222,7 @@ async function fetchTopLandersAsync(domain_id) {
                 links.unshift({ title: 'Affiliate Page', url: result.affiliate_url });
             }
             renderLinks();
+            setHint('hint_links', 'Auto-filled by Shaver');
         }
         // Top landers (overwrites only if no manual edits yet)
         if (Array.isArray(result.landers) && result.landers.length > 0) {

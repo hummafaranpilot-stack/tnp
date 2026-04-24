@@ -72,10 +72,16 @@ function normalize_platform(string $p): string {
  * Map a Shaver domain row to the shape our openForm(offer) JS expects.
  */
 function shaver_domain_to_offer(array $d): array {
-    $url = trim($d['domain_url'] ?? '');
     // Shaver's `label` is the BuyGoods offer ID / ClickBank nickname — not
     // the product's display name. Put it in offer_id and leave offer_name
     // blank for the admin to fill in.
+    //
+    // NOTE: We intentionally leave affiliate_page_url / links empty.
+    // The domain_url is just the tracked domain's base and is NOT a real
+    // affiliate tools URL. The async fetchTopLandersAsync() step scans
+    // Shaver traffic for URLs containing "afftools"/"affiliate" — if none
+    // are found, we would rather leave the field blank than seed a wrong
+    // URL. The admin can fill it in manually if needed.
     return [
         'id'                 => null,
         'shaver_domain_id'   => (int)($d['id'] ?? 0),
@@ -83,8 +89,8 @@ function shaver_domain_to_offer(array $d): array {
         'offer_name'         => '',
         'offer_id'           => $d['label'] ?? '',
         'platform'           => normalize_platform($d['platform'] ?? ''),
-        'affiliate_page_url' => $url, // legacy field, still populated for safety
-        'links'              => $url !== '' ? [['title' => 'Affiliate Page', 'url' => $url]] : [],
+        'affiliate_page_url' => '',
+        'links'              => [],
         'category'           => '',
         'revshare'           => '',
         'cpa'                => '',
