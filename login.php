@@ -26,22 +26,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TNP Admin — Login</title>
+    <title>TNP Admin — Sign In</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body class="login-body">
     <div class="login-card">
-        <h1>TNP Admin</h1>
-        <p class="subtitle">Enter your admin password to continue</p>
+        <div class="login-logo">TNP</div>
+        <h1>Welcome back</h1>
+        <p class="subtitle">Sign in to manage your affiliate offers</p>
         <form method="POST" action="/login">
-            <input type="password" name="password" placeholder="Admin password" autofocus required>
+            <label for="pw">Admin Password</label>
+            <input id="pw" type="password" name="password" placeholder="••••••••" autofocus required>
             <?php if ($error): ?>
                 <p class="error"><?= h($error) ?></p>
             <?php endif; ?>
-            <button type="submit">Login</button>
+            <button type="submit">Sign In</button>
         </form>
-        <p class="back-link"><a href="/">← Back to public page</a></p>
+        <p class="back-link"><a href="/">← Back to public site</a></p>
     </div>
 </body>
 </html>
