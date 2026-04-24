@@ -10,7 +10,12 @@ $action = $_GET['action'] ?? '';
 if ($action !== 'upload') {
     header('Content-Type: application/json');
 }
-require_login_api();
+// top_landers is safe to expose to unauthenticated viewers — it only
+// returns aggregate landing-URL data used by the Promote Now modal.
+$PUBLIC_ACTIONS = ['top_landers'];
+if (!in_array($action, $PUBLIC_ACTIONS, true)) {
+    require_login_api();
+}
 
 try {
     $pdo = get_pdo();
@@ -102,7 +107,9 @@ try {
     if ($method === 'POST' && $action === 'top_landers') {
         $data = read_json();
         $domain_id = (int)($data['domain_id'] ?? 0);
-        $result = shaver_fetch_top_landers($domain_id);
+        $limit = (int)($data['limit'] ?? 5);
+        if ($limit < 1 || $limit > 1000) $limit = 5;
+        $result = shaver_fetch_top_landers($domain_id, $limit);
         echo json_encode($result);
         exit;
     }

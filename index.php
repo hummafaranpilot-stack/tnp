@@ -369,7 +369,20 @@ foreach ($offers as $o) {
                                             $promote_url = $o['affiliate_page_url'];
                                         }
                                     ?>
-                                    <?php if ($promote_url): ?>
+                                    <?php
+                                        $is_buygoods = strcasecmp($o['platform'] ?? '', 'BuyGoods') === 0;
+                                    ?>
+                                    <?php if ($is_buygoods && (!empty($landers) || $promote_url)): ?>
+                                        <button type="button" class="btn-promote"
+                                                data-offer-name="<?= h($o['offer_name']) ?>"
+                                                data-shaver-id="<?= (int)($o['shaver_domain_id'] ?? 0) ?>"
+                                                data-landers='<?= h(json_encode($landers ?? [], JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'
+                                                data-base-url="<?= h($promote_url) ?>"
+                                                onclick="openPromoteModal(this)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7h9l-11 13 2-9H2z"/></svg>
+                                            Promote Now
+                                        </button>
+                                    <?php elseif ($promote_url): ?>
                                         <a class="btn-promote" href="<?= h($promote_url) ?>" target="_blank" rel="noopener noreferrer">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7h9l-11 13 2-9H2z"/></svg>
                                             Promote Now
@@ -406,6 +419,67 @@ foreach ($offers as $o) {
     <a class="fab-btn fab-telegram" href="https://t.me/TrustedNutraProduct" target="_blank" rel="noopener noreferrer" aria-label="Telegram" data-tip="Message us on Telegram @TrustedNutraProduct">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
     </a>
+</div>
+
+<!-- Promote Now modal (BuyGoods hoplink generator) -->
+<div id="promoteModal" class="modal hidden" onclick="if(event.target===this) closePromoteModal()">
+    <div class="modal-card promote-modal">
+        <div class="promote-header">
+            <div class="promote-title">
+                <h3>Get Your Links And <span>Get Started</span></h3>
+                <p class="promote-subtitle" id="promoteOfferName">BuyGoods offer</p>
+            </div>
+            <div class="promote-brand">buygoods</div>
+            <button class="promote-close" onclick="closePromoteModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="promote-steps">
+                <div class="promote-step">
+                    <div class="step-dot">1</div>
+                    <div class="step-body">
+                        <span class="step-label">Step 1</span>
+                        <h4>Enter your BuyGoods Affiliate ID</h4>
+                        <input type="text" id="promote-cbid" placeholder="Your BuyGoods ID" autocomplete="off">
+                        <p class="step-help">
+                            Don't have a BuyGoods Affiliate Account?
+                            <a href="https://backoffice.buygoods.com/v2/affsignup" target="_blank" rel="noopener noreferrer">Click Here to Create</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="promote-step">
+                    <div class="step-dot">2</div>
+                    <div class="step-body">
+                        <span class="step-label">Step 2</span>
+                        <h4>Enter your SubID <span class="optional">(Optional)</span></h4>
+                        <input type="text" id="promote-tid" placeholder="Your SubID" autocomplete="off">
+                    </div>
+                </div>
+                <div class="promote-step">
+                    <div class="step-dot">3</div>
+                    <div class="step-body">
+                        <span class="step-label">Step 3</span>
+                        <h4>Select Landing Page</h4>
+                        <select id="promote-landing"></select>
+                        <p class="step-help" id="promoteLoadingNote" style="display:none;">Loading more landers from Shaver…</p>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-generate" onclick="generateHoplink()">
+                Generate Affiliate Link
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="8 12 12 16 16 12"/><line x1="12" y1="8" x2="12" y2="16"/></svg>
+            </button>
+            <div id="promote-result" class="promote-result hidden">
+                <label>Your Affiliate Link:</label>
+                <div class="result-row">
+                    <input type="text" id="promote-output" readonly>
+                    <button type="button" id="copyHoplinkBtn" onclick="copyHoplink()" title="Copy link">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10"/></svg>
+                    </button>
+                </div>
+                <p class="copy-toast" id="copyToast">Copied to clipboard!</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Tier-1 countries modal -->
@@ -450,6 +524,130 @@ foreach ($offers as $o) {
             }
         } catch (_) {}
     })();
+
+    // ============== Promote Now modal (BuyGoods) ==============
+    function openPromoteModal(btn) {
+        const offerName = btn.dataset.offerName || 'BuyGoods offer';
+        const shaverId  = Number(btn.dataset.shaverId || 0);
+        const baseUrl   = btn.dataset.baseUrl || '';
+        let topLanders = [];
+        try { topLanders = JSON.parse(btn.dataset.landers || '[]'); } catch (_) {}
+
+        document.getElementById('promoteOfferName').textContent = offerName;
+        document.getElementById('promote-cbid').value = '';
+        document.getElementById('promote-tid').value = '';
+        document.getElementById('promote-result').classList.add('hidden');
+
+        const sel = document.getElementById('promote-landing');
+        sel.innerHTML = '';
+        const note = document.getElementById('promoteLoadingNote');
+        note.style.display = 'none';
+
+        // Determine default URL (domain root of the first top lander, or the base URL)
+        let defaultUrl = baseUrl;
+        try {
+            const source = (topLanders[0] && topLanders[0].url) || baseUrl;
+            if (source) defaultUrl = new URL(source).origin + '/';
+        } catch (_) {}
+        if (defaultUrl) {
+            const opt = document.createElement('option');
+            opt.value = defaultUrl;
+            opt.textContent = 'Default — ' + defaultUrl.replace(/^https?:\/\//, '');
+            sel.appendChild(opt);
+        }
+
+        const seenUrls = new Set();
+        if (defaultUrl) seenUrls.add(defaultUrl);
+        if (topLanders.length > 0) {
+            const og = document.createElement('optgroup');
+            og.label = 'Top Landers';
+            topLanders.forEach(l => {
+                if (!l || !l.url || seenUrls.has(l.url)) return;
+                seenUrls.add(l.url);
+                const opt = document.createElement('option');
+                opt.value = l.url;
+                opt.textContent = l.label || l.url;
+                og.appendChild(opt);
+            });
+            if (og.children.length > 0) sel.appendChild(og);
+        }
+
+        document.getElementById('promoteModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Lazily fetch more landers from Shaver for "All Landers" group
+        if (shaverId > 0) {
+            note.style.display = '';
+            fetch('/api.php?action=top_landers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain_id: shaverId, limit: 1000 }),
+            })
+            .then(r => r.json())
+            .then(result => {
+                note.style.display = 'none';
+                if (!result.ok || !Array.isArray(result.landers) || result.landers.length === 0) return;
+                const og = document.createElement('optgroup');
+                og.label = 'All Landers';
+                result.landers.forEach(l => {
+                    if (!l || !l.url || seenUrls.has(l.url)) return;
+                    seenUrls.add(l.url);
+                    const opt = document.createElement('option');
+                    opt.value = l.url;
+                    const visits = l.visits ? ` · ${l.visits} visits` : '';
+                    opt.textContent = (l.label || l.url) + visits;
+                    og.appendChild(opt);
+                });
+                if (og.children.length > 0) sel.appendChild(og);
+            })
+            .catch(() => { note.style.display = 'none'; });
+        }
+    }
+
+    function closePromoteModal() {
+        document.getElementById('promoteModal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function generateHoplink() {
+        const cbid = document.getElementById('promote-cbid').value.trim();
+        if (!cbid) {
+            document.getElementById('promote-cbid').focus();
+            alert('Please enter your BuyGoods Affiliate ID.');
+            return;
+        }
+        const tid     = document.getElementById('promote-tid').value.trim();
+        const landing = document.getElementById('promote-landing').value;
+        if (!landing) {
+            alert('Please pick a landing page.');
+            return;
+        }
+        const sep = landing.includes('?') ? '&' : '?';
+        let hoplink = landing + sep + 'aff_id=' + encodeURIComponent(cbid);
+        if (tid) hoplink += '&sub_id=' + encodeURIComponent(tid);
+        document.getElementById('promote-output').value = hoplink;
+        document.getElementById('promote-result').classList.remove('hidden');
+        // auto-select for convenience
+        setTimeout(() => document.getElementById('promote-output').select(), 50);
+    }
+
+    function copyHoplink() {
+        const val = document.getElementById('promote-output').value;
+        if (!val) return;
+        navigator.clipboard.writeText(val).then(() => {
+            const t = document.getElementById('copyToast');
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 1500);
+        }).catch(() => {
+            document.getElementById('promote-output').select();
+            document.execCommand('copy');
+        });
+    }
+
+    // Close on Esc
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closePromoteModal();
+    });
 
     // Countries modal controls
     function showCountries() {
