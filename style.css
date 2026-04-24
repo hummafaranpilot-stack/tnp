@@ -410,6 +410,19 @@ main.page { padding: 2rem 0 4rem; }
     white-space: nowrap;
 }
 
+/* Merged Product cell (image on top, platform badge below) */
+.offer-table td.product-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+}
+.product-cell .thumb,
+.product-cell .thumb-empty {
+    display: block;
+    margin: 0 auto 0.6rem;
+}
+.product-cell .badge { display: inline-block; }
+
 /* Merged Offer cell (name + id + category stacked, vertically centered) */
 .offer-table td.offer-cell {
     padding: 1rem 1.25rem;

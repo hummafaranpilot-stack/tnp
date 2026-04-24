@@ -234,8 +234,7 @@ foreach ($counts as $p => $fields) {
                         <thead>
                             <tr>
                                 <th>Sr</th>
-                                <th>Image</th>
-                                <th>Platform</th>
+                                <th>Product</th>
                                 <th>Offer</th>
                                 <th>Top Landers</th>
                                 <th>Links</th>
@@ -257,14 +256,16 @@ foreach ($counts as $p => $fields) {
                         ?>
                             <tr data-id="<?= h((string)$o['id']) ?>" data-search="<?= h($search_text) ?>" data-offer='<?= h(json_encode($o, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
                                 <td class="sr"><?= h((string)$o['sr']) ?></td>
-                                <td>
+                                <td class="product-cell">
                                     <?php if (!empty($o['image_url'])): ?>
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="">
                                     <?php else: ?>
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>
+                                    <?php if (!empty($o['platform'])): ?>
+                                        <span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span>
+                                    <?php endif; ?>
                                 </td>
-                                <td><span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span></td>
                                 <td class="offer-cell">
                                     <span class="offer-name"><?= h($o['offer_name']) ?></span>
                                     <?php if (!empty($o['offer_id'])): ?>
