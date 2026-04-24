@@ -254,7 +254,7 @@ foreach ($offers as $o) {
                                 <td class="sr"><?= h((string)$o['sr']) ?></td>
                                 <td>
                                     <?php if (!empty($o['image_url'])): ?>
-                                        <img class="thumb" src="<?= h($o['image_url']) ?>" alt="<?= h($o['offer_name']) ?>">
+                                        <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="<?= h($o['offer_name']) ?>">
                                     <?php else: ?>
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>

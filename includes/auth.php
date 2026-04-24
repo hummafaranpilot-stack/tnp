@@ -29,3 +29,7 @@ function require_login_api(): void {
 function h(?string $s): string {
     return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8');
 }
+
+function is_transparent_image(string $url): bool {
+    return (bool) preg_match('/\.(png|webp|svg)(\?|#|$)/i', $url);
+}

@@ -169,8 +169,11 @@ function shaver_fetch_top_landers(int $domain_id, int $limit = 5): array {
     $i = 0;
     foreach ($lander_counts as $url => $visits) {
         if ($i >= $limit) break;
+        $info = lander_info_from_url($url);
         $landers[] = [
-            'label'  => lander_label_from_url($url, $i),
+            'label'  => $info['label'],
+            'type'   => $info['type'],
+            'advice' => $info['advice'],
             'url'    => $url,
             'visits' => $visits,
         ];
@@ -202,11 +205,36 @@ function normalize_landing_url(string $url): string {
     return $scheme . '://' . $host . $path;
 }
 
-function lander_label_from_url(string $url, int $index): string {
+/**
+ * Classify a landing URL by keywords in the path. Returns a human
+ * label, a type slug, and our recommendation on whether it needs
+ * a prelander.
+ *
+ *   short* → medium-length page, pair with a prelander
+ *   long*  → long VSL; can direct-link, no prelander needed
+ *   dtc*   → direct-to-consumer pricing page, pair with a prelander
+ *
+ * @return array{label: string, type: string, advice: string}
+ */
+function lander_info_from_url(string $url): array {
     $path = parse_url($url, PHP_URL_PATH) ?? '/';
-    $path = trim($path, '/');
-    if ($path === '') return 'Main Lander';
-    // Pretty-print the path: "v2/vsl" → "V2 / Vsl"
-    $parts = array_map('ucfirst', array_filter(explode('/', $path)));
-    return implode(' / ', $parts) ?: ('Lander ' . ($index + 1));
+    $lower = strtolower($path);
+
+    // Check most-specific keywords first. Suffix digits (long2, long4) are
+    // kept so variants stay visually distinct in the list.
+    if (preg_match('#/(dtc\d*)(?:/|$)#', $lower, $m)) {
+        return ['label' => strtoupper($m[1]) . ' Page', 'type' => 'dtc', 'advice' => 'prelander'];
+    }
+    if (preg_match('#/(long\d*)(?:/|$)#', $lower, $m)) {
+        return ['label' => ucfirst($m[1]) . ' VSL', 'type' => 'long', 'advice' => 'direct-link'];
+    }
+    if (preg_match('#/(short\d*)(?:/|$)#', $lower, $m)) {
+        return ['label' => ucfirst($m[1]) . ' Lander', 'type' => 'short', 'advice' => 'prelander'];
+    }
+
+    // Fallback: pretty-print the path
+    $clean = trim($path, '/');
+    if ($clean === '') return ['label' => 'Main Lander', 'type' => 'other', 'advice' => ''];
+    $parts = array_map('ucfirst', array_filter(explode('/', $clean)));
+    return ['label' => implode(' / ', $parts) ?: 'Lander', 'type' => 'other', 'advice' => ''];
 }

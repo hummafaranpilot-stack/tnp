@@ -25,8 +25,12 @@ foreach ($offers as $o) {
 // Shaver analytics: fetch active domain suggestions
 $shaver = shaver_fetch_domains();
 $existing_names = [];
+$existing_shaver_ids = [];
 foreach ($offers as $o) {
     $existing_names[strtolower(trim($o['offer_name']))] = true;
+    if (!empty($o['shaver_domain_id'])) {
+        $existing_shaver_ids[(int)$o['shaver_domain_id']] = true;
+    }
 }
 
 // Dismissed Shaver domains (user ne × pe click kiya)
@@ -154,42 +158,45 @@ foreach ($counts as $p => $fields) {
                 foreach ($shaver['domains'] as $d) {
                     $label = strtolower(trim($d['label'] ?? ''));
                     $dom_id = (int)($d['id'] ?? 0);
-                    if ($label === '' || isset($existing_names[$label]) || isset($dismissed_ids[$dom_id])) continue;
+                    if ($label === '') continue;
+                    if (isset($existing_shaver_ids[$dom_id])) continue; // already imported
+                    if (isset($existing_names[$label])) continue;       // name collides
+                    if (isset($dismissed_ids[$dom_id])) continue;       // user dismissed
                     $new_suggestions[] = $d;
                 }
             ?>
             <?php if (!empty($new_suggestions)): ?>
-            <div class="section-head" style="margin-top: 2rem;">
-                <div>
+            <section class="magic-section">
+                <div class="magic-header">
                     <h2 class="section-title">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px; color: var(--indigo-500);"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                        <span class="magic-emoji">✨</span>
                         Suggestions from Shaver
                         <span class="count">(<?= count($new_suggestions) ?> new)</span>
                     </h2>
-                    <p class="subtitle" style="margin-top: 0.25rem;">Active domains not yet in this directory — click any to pre-fill the form.</p>
+                    <p class="subtitle">Active domains not yet in this directory — click any to pre-fill the form.</p>
                 </div>
-            </div>
-            <div class="suggest-grid">
-                <?php foreach ($new_suggestions as $d): ?>
-                    <div class="suggest-card-wrap" data-shaver-id="<?= h((string)$d['id']) ?>">
-                        <button type="button" class="suggest-dismiss" title="Dismiss forever" onclick="dismissSuggestion(event, this)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                        <button type="button" class="suggest-card"
-                                data-suggest='<?= h(json_encode(shaver_domain_to_offer($d), JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
-                            <div class="suggest-card-head">
-                                <span class="suggest-label"><?= h($d['label']) ?></span>
-                                <span class="badge badge-slate"><?= h(normalize_platform($d['platform'])) ?></span>
-                            </div>
-                            <span class="suggest-url"><?= h($d['domain_url']) ?></span>
-                            <span class="suggest-cta">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                Add to directory
-                            </span>
-                        </button>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+                <div class="suggest-grid">
+                    <?php foreach ($new_suggestions as $d): ?>
+                        <div class="suggest-card-wrap" data-shaver-id="<?= h((string)$d['id']) ?>">
+                            <button type="button" class="suggest-dismiss" title="Dismiss forever" onclick="dismissSuggestion(event, this)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                            <button type="button" class="suggest-card"
+                                    data-suggest='<?= h(json_encode(shaver_domain_to_offer($d), JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
+                                <div class="suggest-card-head">
+                                    <span class="suggest-label"><?= h($d['label']) ?></span>
+                                    <span class="badge badge-slate"><?= h(normalize_platform($d['platform'])) ?></span>
+                                </div>
+                                <span class="suggest-url"><?= h($d['domain_url']) ?></span>
+                                <span class="suggest-cta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Add to directory
+                                </span>
+                            </button>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
             <?php endif; ?>
         <?php elseif (!$shaver['ok'] && ($shaver['error'] ?? '') !== 'not_configured'): ?>
             <div class="section-head" style="margin-top: 2rem;">
@@ -247,7 +254,7 @@ foreach ($counts as $p => $fields) {
                                 <td class="sr"><?= h((string)$o['sr']) ?></td>
                                 <td>
                                     <?php if (!empty($o['image_url'])): ?>
-                                        <img class="thumb" src="<?= h($o['image_url']) ?>" alt="">
+                                        <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="">
                                     <?php else: ?>
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>

@@ -22,11 +22,12 @@ try {
 
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers,
-             affiliate_page_url, revshare, cpa, allowed_geos, restriction)
+             affiliate_page_url, revshare, cpa, allowed_geos, restriction, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers,
-                    :affiliate_page_url, :revshare, :cpa, :allowed_geos, :restriction)");
+                    :affiliate_page_url, :revshare, :cpa, :allowed_geos, :restriction, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
+        $params[':shaver_domain_id'] = !empty($data['shaver_domain_id']) ? (int)$data['shaver_domain_id'] : null;
         $stmt->execute($params);
         echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
         exit;

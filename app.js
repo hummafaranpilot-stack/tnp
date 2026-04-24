@@ -1,5 +1,6 @@
 let landers = [];
 let editingId = null;
+let currentShaverDomainId = null; // set when opening form from a Shaver suggestion
 
 function getNextSr() {
     const el = document.querySelector('main[data-next-sr]');
@@ -56,6 +57,7 @@ function openForm(offer = null) {
     const isEdit = offer && offer.id;
     const isFromShaver = offer && !isEdit && offer.shaver_domain_id;
     editingId = isEdit ? offer.id : null;
+    currentShaverDomainId = isFromShaver ? Number(offer.shaver_domain_id) : null;
 
     document.getElementById('modalTitle').textContent = isEdit ? 'Edit Offer' : 'Add New Offer';
     document.getElementById('f_id').value = isEdit ? offer.id : '';
@@ -277,17 +279,48 @@ function removeLander(i) {
     renderLanders();
 }
 
+function moveLander(i, delta) {
+    const j = i + delta;
+    if (j < 0 || j >= landers.length) return;
+    [landers[i], landers[j]] = [landers[j], landers[i]];
+    renderLanders();
+}
+
+function deriveLanderType(url) {
+    const lower = (url || '').toLowerCase();
+    if (/\/(dtc\d*)(\/|$)/.test(lower))   return { type: 'dtc',   advice: 'prelander' };
+    if (/\/(long\d*)(\/|$)/.test(lower))  return { type: 'long',  advice: 'direct-link' };
+    if (/\/(short\d*)(\/|$)/.test(lower)) return { type: 'short', advice: 'prelander' };
+    return { type: 'other', advice: '' };
+}
+
 function renderLanders() {
     const box = document.getElementById('landersList');
     box.innerHTML = '';
     landers.forEach((l, i) => {
         const row = document.createElement('div');
         row.className = 'lander-item' + (l.prefilled ? ' prefilled' : '');
-        const visitsBadge = l.visits ? ` <span class="visits-tag">${l.visits} visits</span>` : '';
+        const derived = deriveLanderType(l.url);
+        const type = l.type || derived.type;
+        const advice = l.advice || derived.advice;
+        const visitsBadge = l.visits ? `<span class="visits-tag">${l.visits} visits</span>` : '';
+        const adviceChip = advice ? `<span class="advice-chip advice-${type}">${escapeHtml(advice)}</span>` : '';
+        const upDisabled = i === 0 ? 'disabled' : '';
+        const downDisabled = i === landers.length - 1 ? 'disabled' : '';
         row.innerHTML = `
-            <span class="label">${escapeHtml(l.label)}${visitsBadge}</span>
-            <span class="url">${escapeHtml(l.url)}</span>
-            <button type="button" class="remove" onclick="removeLander(${i})">&times;</button>
+            <div class="lander-reorder">
+                <button type="button" class="reorder-btn" ${upDisabled} onclick="moveLander(${i}, -1)" title="Move up" aria-label="Move up">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <button type="button" class="reorder-btn" ${downDisabled} onclick="moveLander(${i}, 1)" title="Move down" aria-label="Move down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+            <div class="lander-main">
+                <span class="label">${escapeHtml(l.label)}${adviceChip}${visitsBadge}</span>
+                <span class="url">${escapeHtml(l.url)}</span>
+            </div>
+            <button type="button" class="remove" onclick="removeLander(${i})" title="Remove">&times;</button>
         `;
         box.appendChild(row);
     });
@@ -314,6 +347,7 @@ async function submitForm(e) {
         restriction: document.getElementById('f_restriction').value,
         affiliate_page_url: document.getElementById('f_affiliate_page_url').value,
         top_landers: landers.map(({ label, url }) => ({ label, url })),
+        shaver_domain_id: editingId ? null : currentShaverDomainId,
     };
 
     const action = editingId ? 'update' : 'create';

@@ -47,6 +47,14 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN image_url VARCHAR(500) DEFAULT '' AFTER offer_name");
     }
 
+    // Track which Shaver suggestion produced this offer (so rename-in-TNP
+    // doesn't re-show the suggestion next time)
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'shaver_domain_id'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN shaver_domain_id INT NULL DEFAULT NULL");
+        $pdo->exec("CREATE INDEX idx_offers_shaver_domain_id ON offers(shaver_domain_id)");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (
