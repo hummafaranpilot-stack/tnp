@@ -1384,6 +1384,38 @@ select#promote-landing,
     line-height: 1.4;
 }
 
+/* Checkbox row that sits under a text input (e.g. CPA manual-activation) */
+.checkbox-inline {
+    display: flex !important;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.5rem 0 0 !important;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+    cursor: pointer;
+}
+.checkbox-inline input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--navy-800);
+}
+
+/* Red alert-i next to CPA when it's manually activated */
+.cpa-alert {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.4rem;
+    color: var(--danger);
+    cursor: help;
+    vertical-align: -2px;
+    transition: transform 0.15s;
+}
+.cpa-alert:hover { transform: scale(1.12); }
+
 /* ClickBank-only field reveal */
 .cb-only {
     background: #eff6ff;

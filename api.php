@@ -27,10 +27,10 @@ try {
 
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers, other_pages,
-             affiliate_page_url, links, clickbank_redirect_url, revshare, cpa, allowed_geos, restriction,
+             affiliate_page_url, links, clickbank_redirect_url, revshare, cpa, cpa_manual, allowed_geos, restriction,
              traffic_tips, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers, :other_pages,
-                    :affiliate_page_url, :links, :clickbank_redirect_url, :revshare, :cpa, :allowed_geos, :restriction,
+                    :affiliate_page_url, :links, :clickbank_redirect_url, :revshare, :cpa, :cpa_manual, :allowed_geos, :restriction,
                     :traffic_tips, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
@@ -49,7 +49,7 @@ try {
             offer_id = :offer_id, category = :category, top_landers = :top_landers, other_pages = :other_pages,
             affiliate_page_url = :affiliate_page_url, links = :links,
             clickbank_redirect_url = :clickbank_redirect_url,
-            revshare = :revshare, cpa = :cpa,
+            revshare = :revshare, cpa = :cpa, cpa_manual = :cpa_manual,
             allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips
             WHERE id = :id");
         $params = bind($data);
@@ -188,6 +188,7 @@ function bind(array $d): array {
         ':clickbank_redirect_url' => $cb_url,
         ':revshare' => (string)($d['revshare'] ?? ''),
         ':cpa' => (string)($d['cpa'] ?? ''),
+        ':cpa_manual' => !empty($d['cpa_manual']) ? 1 : 0,
         ':allowed_geos' => (string)($d['allowed_geos'] ?? ''),
         ':restriction' => (string)($d['restriction'] ?? 'No'),
         ':traffic_tips' => json_encode($tips),

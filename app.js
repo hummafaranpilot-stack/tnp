@@ -83,6 +83,17 @@ function openForm(offer = null) {
     document.getElementById('f_cb_url').value = offer?.clickbank_redirect_url || '';
     toggleCbUrlField();
 
+    // CPA manual flag — default checked for ClickBank (new offers), unchecked for others;
+    // for existing offers use whatever was saved.
+    const cbChk = document.getElementById('f_cpa_manual');
+    if (cbChk) {
+        if (isEdit) {
+            cbChk.checked = Boolean(Number(offer?.cpa_manual));
+        } else {
+            cbChk.checked = (document.getElementById('f_platform').value === 'ClickBank');
+        }
+    }
+
     // Image reset
     const imgUrl = offer?.image_url || '';
     document.getElementById('f_image_url').value = imgUrl;
@@ -209,6 +220,11 @@ function toggleCbUrlField() {
     const isCB = platform === 'ClickBank';
     wrap.style.display = isCB ? '' : 'none';
     input.required = isCB;
+    // CPA manual default: ClickBank = checked, others = unchecked.
+    // Only auto-apply when adding (editingId null), so editing an existing offer
+    // doesn't clobber a deliberate user choice.
+    const cbChk = document.getElementById('f_cpa_manual');
+    if (cbChk && !editingId) cbChk.checked = isCB;
 }
 
 async function fetchTopLandersAsync(domain_id) {
@@ -614,6 +630,7 @@ async function submitForm(e) {
         category: document.getElementById('f_category').value,
         revshare: document.getElementById('f_revshare').value,
         cpa: document.getElementById('f_cpa').value,
+        cpa_manual: document.getElementById('f_cpa_manual')?.checked ? 1 : 0,
         allowed_geos: document.getElementById('f_allowed_geos').value,
         restriction: document.getElementById('f_restriction').value,
         clickbank_redirect_url: document.getElementById('f_cb_url').value.trim(),

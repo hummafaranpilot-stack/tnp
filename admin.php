@@ -268,7 +268,8 @@ foreach ($counts as $p => $fields) {
                                 <td class="offer-cell">
                                     <span class="offer-name"><?= h($o['offer_name']) ?></span>
                                     <?php if (!empty($o['offer_id'])): ?>
-                                        <span class="offer-id">Offer ID: <?= h($o['offer_id']) ?></span>
+                                        <?php $id_label = (strcasecmp($o['platform'] ?? '', 'ClickBank') === 0) ? 'Nickname' : 'Offer ID'; ?>
+                                        <span class="offer-id"><?= $id_label ?>: <?= h($o['offer_id']) ?></span>
                                     <?php endif; ?>
                                     <?php if (!empty($o['category'])): ?>
                                         <span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span>
@@ -339,6 +340,8 @@ foreach ($counts as $p => $fields) {
                                     <?php
                                         $hasRev = !empty($o['revshare']);
                                         $hasCpa = !empty($o['cpa']);
+                                        $cpaManual = !empty($o['cpa_manual']);
+                                        $cpaTip = 'Manually activated CPA — Ask the admin to unlock it, or complete 10 sales on RevShare and it will be activated for you automatically.';
                                     ?>
                                     <?php if (!$hasRev && !$hasCpa): ?>
                                         <span class="muted">—</span>
@@ -350,7 +353,14 @@ foreach ($counts as $p => $fields) {
                                             <div class="commission-or">OR</div>
                                         <?php endif; ?>
                                         <?php if ($hasCpa): ?>
-                                            <div class="commission-cpa"><strong><?= h($o['cpa']) ?></strong> Fixed CPA</div>
+                                            <div class="commission-cpa">
+                                                <strong><?= h($o['cpa']) ?></strong> Fixed CPA
+                                                <?php if ($cpaManual): ?>
+                                                    <span class="cpa-alert" data-tip="<?= h($cpaTip) ?>" aria-label="<?= h($cpaTip) ?>">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         <?php endif; ?>
                                     <?php endif; ?>
                                 </td>
@@ -484,6 +494,10 @@ foreach ($counts as $p => $fields) {
                     <div>
                         <label>CPA <span class="field-hint" id="hint_cpa"></span></label>
                         <input type="text" name="cpa" id="f_cpa" placeholder="e.g. $170">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="f_cpa_manual">
+                            <span>CPA is manually activated (shows alert to affiliates)</span>
+                        </label>
                     </div>
                     <div>
                         <label>Allowed GEOs <span class="field-hint" id="hint_allowed_geos"></span></label>

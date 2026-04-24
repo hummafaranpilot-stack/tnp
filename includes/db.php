@@ -80,6 +80,13 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN clickbank_redirect_url VARCHAR(500) NULL");
     }
 
+    // CPA manual-activation flag — when set, the viewer shows a red alert-i
+    // next to the CPA line explaining it has to be unlocked by the admin
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'cpa_manual'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN cpa_manual TINYINT(1) NOT NULL DEFAULT 0 AFTER cpa");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (
