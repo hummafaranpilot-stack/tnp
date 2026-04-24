@@ -277,32 +277,51 @@ foreach ($tip_counts as $p => $labels) {
                             ]));
                             $stored_landers = json_decode($o['top_landers'] ?? '[]', true) ?: [];
                             $restriction_val = $o['restriction'] ?: 'No';
+                            $soon = !empty($o['coming_soon']);
+                            $blank = $soon ? coming_soon_chip() : '<span class="muted">—</span>';
                         ?>
-                            <tr data-id="<?= h((string)$o['id']) ?>" data-search="<?= h($search_text) ?>" data-offer='<?= h(json_encode($o, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
-                                <td class="sr"><?= h((string)$o['sr']) ?></td>
+                            <tr data-id="<?= h((string)$o['id']) ?>" data-search="<?= h($search_text) ?>" data-offer='<?= h(json_encode($o, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>' draggable="true">
+                                <td class="sr">
+                                    <span class="drag-handle" title="Drag to reorder">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="15" cy="19" r="1.6"/></svg>
+                                    </span>
+                                    <span class="sr-num"><?= h((string)$o['sr']) ?></span>
+                                </td>
                                 <td class="product-cell">
                                     <?php if (!empty($o['image_url'])): ?>
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="">
+                                    <?php elseif ($soon): ?>
+                                        <span class="thumb-empty thumb-soon">Soon</span>
                                     <?php else: ?>
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>
                                     <?php if (!empty($o['platform'])): ?>
                                         <span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td class="offer-cell">
-                                    <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php if (!empty($o['offer_name'])): ?>
+                                        <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <span class="offer-name muted">Coming Soon</span>
+                                    <?php endif; ?>
                                     <?php if (!empty($o['offer_id'])): ?>
                                         <?php $id_label = (strcasecmp($o['platform'] ?? '', 'ClickBank') === 0) ? 'Nickname' : 'Offer ID'; ?>
                                         <span class="offer-id"><?= $id_label ?>: <?= h($o['offer_id']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <span class="offer-id"><?= $blank ?></span>
                                     <?php endif; ?>
                                     <?php if (!empty($o['category'])): ?>
                                         <span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if (empty($stored_landers)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <div class="landers">
                                         <?php foreach ($stored_landers as $l):
@@ -348,7 +367,7 @@ foreach ($tip_counts as $p => $labels) {
                                         }
                                     ?>
                                     <?php if (empty($offer_links)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <div class="offer-links">
                                         <?php foreach ($offer_links as $ln):
@@ -370,7 +389,7 @@ foreach ($tip_counts as $p => $labels) {
                                         $cpaTip = 'Manually activated CPA — Ask the admin to unlock it, or complete 10 sales on RevShare and it will be activated for you automatically.';
                                     ?>
                                     <?php if (!$hasRev && !$hasCpa): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <?php if ($hasRev): ?>
                                             <div class="commission-rev"><strong><?= h($o['revshare']) ?></strong> Revshare</div>
@@ -396,8 +415,10 @@ foreach ($tip_counts as $p => $labels) {
                                             Tier-1 (39 Countries)
                                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                                         </button>
-                                    <?php else: ?>
+                                    <?php elseif (!empty($o['allowed_geos'])): ?>
                                         <?= h($o['allowed_geos']) ?>
+                                    <?php else: ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -405,7 +426,7 @@ foreach ($tip_counts as $p => $labels) {
                                         $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
                                     ?>
                                     <?php if (empty($tips)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <ul class="tip-list">
                                         <?php foreach ($tips as $t):
@@ -454,6 +475,14 @@ foreach ($tip_counts as $p => $labels) {
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     Basics
                 </h4>
+                <label class="coming-soon-toggle" id="comingSoonToggle">
+                    <input type="checkbox" id="f_coming_soon" onchange="toggleComingSoon()">
+                    <span class="cs-dot"></span>
+                    <span class="cs-label">
+                        <strong>Coming Soon</strong>
+                        <em>All required fields become optional. Any blank field will show "Coming Soon" on the public page.</em>
+                    </span>
+                </label>
                 <div class="grid">
                     <div><label>Sr # <span class="required">*</span></label><input type="number" name="sr" id="f_sr" required></div>
                     <div>
@@ -677,6 +706,60 @@ foreach ($tip_counts as $p => $labels) {
             }
         });
     });
+
+    // Drag-to-reorder offers: the admin picks a row order here, and the
+    // public viewer reads the table ORDER BY sr ASC. So on drop we POST
+    // the new id sequence to /api.php?action=reorder which renumbers
+    // offers.sr sequentially (1..N).
+    (function initRowDrag() {
+        const tbody = document.getElementById('offersBody');
+        if (!tbody) return;
+        let dragged = null;
+
+        tbody.addEventListener('dragstart', e => {
+            const tr = e.target.closest('tr');
+            if (!tr) return;
+            dragged = tr;
+            tr.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        tbody.addEventListener('dragend', () => {
+            if (dragged) dragged.classList.remove('dragging');
+            tbody.querySelectorAll('.drag-over').forEach(r => r.classList.remove('drag-over'));
+            dragged = null;
+        });
+        tbody.addEventListener('dragover', e => {
+            e.preventDefault();
+            const tr = e.target.closest('tr');
+            if (!tr || tr === dragged) return;
+            tbody.querySelectorAll('.drag-over').forEach(r => r.classList.remove('drag-over'));
+            tr.classList.add('drag-over');
+            const rect = tr.getBoundingClientRect();
+            const before = (e.clientY - rect.top) < rect.height / 2;
+            tbody.insertBefore(dragged, before ? tr : tr.nextSibling);
+        });
+        tbody.addEventListener('drop', async e => {
+            e.preventDefault();
+            tbody.querySelectorAll('.drag-over').forEach(r => r.classList.remove('drag-over'));
+            const ids = Array.from(tbody.querySelectorAll('tr')).map(r => Number(r.dataset.id)).filter(Boolean);
+            // Renumber Sr visually right away
+            Array.from(tbody.querySelectorAll('tr')).forEach((r, i) => {
+                const n = r.querySelector('.sr-num');
+                if (n) n.textContent = String(i + 1);
+            });
+            try {
+                const res = await fetch('/api.php?action=reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids }),
+                });
+                const result = await res.json();
+                if (!result.ok) alert('Reorder failed: ' + (result.error || 'Unknown'));
+            } catch (err) {
+                alert('Reorder request failed: ' + err.message);
+            }
+        });
+    })();
 </script>
 </body>
 </html>

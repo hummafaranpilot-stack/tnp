@@ -28,10 +28,10 @@ try {
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers, other_pages,
              affiliate_page_url, links, clickbank_redirect_url, revshare, cpa, cpa_manual, allowed_geos, restriction,
-             traffic_tips, shaver_domain_id)
+             traffic_tips, coming_soon, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers, :other_pages,
                     :affiliate_page_url, :links, :clickbank_redirect_url, :revshare, :cpa, :cpa_manual, :allowed_geos, :restriction,
-                    :traffic_tips, :shaver_domain_id)");
+                    :traffic_tips, :coming_soon, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
         $params[':shaver_domain_id'] = !empty($data['shaver_domain_id']) ? (int)$data['shaver_domain_id'] : null;
@@ -50,7 +50,8 @@ try {
             affiliate_page_url = :affiliate_page_url, links = :links,
             clickbank_redirect_url = :clickbank_redirect_url,
             revshare = :revshare, cpa = :cpa, cpa_manual = :cpa_manual,
-            allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips
+            allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips,
+            coming_soon = :coming_soon
             WHERE id = :id");
         $params = bind($data);
         $params[':id'] = $id;
@@ -118,6 +119,24 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'reorder') {
+        $data = read_json();
+        $ids = $data['ids'] ?? [];
+        if (!is_array($ids) || empty($ids)) throw new RuntimeException('Missing ids');
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare('UPDATE offers SET sr = :sr WHERE id = :id');
+        $sr = 1;
+        foreach ($ids as $id) {
+            $id = (int)$id;
+            if ($id <= 0) continue;
+            $stmt->execute([':sr' => $sr, ':id' => $id]);
+            $sr++;
+        }
+        $pdo->commit();
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'dismiss_suggestion') {
         $data = read_json();
         $domain_id = (int)($data['shaver_domain_id'] ?? 0);
@@ -150,8 +169,10 @@ function bind(array $d): array {
     if (!is_array($links)) $links = [];
     $platform = (string)($d['platform'] ?? '');
     $cb_url = trim((string)($d['clickbank_redirect_url'] ?? ''));
+    $coming_soon = !empty($d['coming_soon']) ? 1 : 0;
     // Server-side guard: ClickBank offers must carry a redirect URL
-    if (strcasecmp($platform, 'ClickBank') === 0 && $cb_url === '') {
+    // (skipped while coming_soon is on — the admin is creating a placeholder)
+    if (!$coming_soon && strcasecmp($platform, 'ClickBank') === 0 && $cb_url === '') {
         throw new RuntimeException('ClickBank offers require a redirect URL (admin → Basics → ClickBank Redirect URL).');
     }
     $tips_raw = $d['traffic_tips'] ?? [];
@@ -192,5 +213,6 @@ function bind(array $d): array {
         ':allowed_geos' => (string)($d['allowed_geos'] ?? ''),
         ':restriction' => (string)($d['restriction'] ?? 'No'),
         ':traffic_tips' => json_encode($tips),
+        ':coming_soon' => $coming_soon,
     ];
 }

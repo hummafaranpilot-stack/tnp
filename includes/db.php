@@ -87,6 +87,14 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN cpa_manual TINYINT(1) NOT NULL DEFAULT 0 AFTER cpa");
     }
 
+    // Coming Soon flag — admin can create a skeleton offer from a Shaver
+    // suggestion before details are finalized; viewer shows "Coming Soon"
+    // in place of any blank field.
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'coming_soon'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN coming_soon TINYINT(1) NOT NULL DEFAULT 0");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (

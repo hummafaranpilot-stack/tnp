@@ -81,3 +81,12 @@ function advice_type_for(string $advice): string {
         default                      => 'custom',
     };
 }
+
+/**
+ * Inline "Coming Soon" chip shown when an offer row has the coming_soon
+ * flag set and the requested field is blank. Keeps the viewer table
+ * non-empty while the admin still fills in real details.
+ */
+function coming_soon_chip(): string {
+    return '<span class="coming-soon-chip">Coming Soon</span>';
+}

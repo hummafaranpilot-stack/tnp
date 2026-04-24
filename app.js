@@ -81,6 +81,15 @@ function openForm(offer = null) {
     document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1 Default';
     document.getElementById('f_restriction').value = offer?.restriction || 'No';
     document.getElementById('f_cb_url').value = offer?.clickbank_redirect_url || '';
+
+    // Coming Soon flag — default on when seeding from a Shaver suggestion
+    // (admin is creating a placeholder entry), off otherwise.
+    const csChk = document.getElementById('f_coming_soon');
+    if (csChk) {
+        if (isEdit) csChk.checked = Boolean(Number(offer?.coming_soon));
+        else csChk.checked = isFromShaver;
+    }
+    toggleComingSoon();
     toggleCbUrlField();
 
     // CPA manual flag — default checked for ClickBank (new offers), unchecked for others;
@@ -236,12 +245,28 @@ function toggleCbUrlField() {
     if (!wrap || !input) return;
     const isCB = platform === 'ClickBank';
     wrap.style.display = isCB ? '' : 'none';
-    input.required = isCB;
+    // Coming Soon overrides: never require ClickBank URL
+    const soon = document.getElementById('f_coming_soon')?.checked;
+    input.required = isCB && !soon;
     // CPA manual default: ClickBank = checked, others = unchecked.
     // Only auto-apply when adding (editingId null), so editing an existing offer
     // doesn't clobber a deliberate user choice.
     const cbChk = document.getElementById('f_cpa_manual');
     if (cbChk && !editingId) cbChk.checked = isCB;
+}
+
+// Coming Soon: when on, drop `required` from every mandatory field so an
+// admin can save a skeleton offer. Also tag the form so the CSS can dim
+// the "*" indicators.
+function toggleComingSoon() {
+    const on = document.getElementById('f_coming_soon')?.checked;
+    const form = document.getElementById('offerForm');
+    if (form) form.classList.toggle('coming-soon-on', !!on);
+    ['f_sr', 'f_platform', 'f_offer_name'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.required = !on;
+    });
+    toggleCbUrlField(); // re-evaluate ClickBank URL requirement
 }
 
 async function fetchTopLandersAsync(domain_id) {
@@ -690,6 +715,7 @@ async function submitForm(e) {
             return out;
         }),
         shaver_domain_id: editingId ? null : currentShaverDomainId,
+        coming_soon: document.getElementById('f_coming_soon')?.checked ? 1 : 0,
     };
 
     const action = editingId ? 'update' : 'create';

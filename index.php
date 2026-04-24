@@ -52,6 +52,45 @@ foreach ($offers as $o) {
     <link rel="stylesheet" href="/style.css?v=<?= @filemtime(__DIR__ . '/style.css') ?: time() ?>">
 </head>
 <body>
+
+<!-- Mobile-only gate: the offers table is unreadable on phones, so we
+     redirect mobile visitors to a branded landing screen. CSS hides the
+     admin-shell + FAB under 820px; everything else stays as-is. -->
+<section class="mobile-gate" aria-hidden="true">
+    <img class="mg-logo" src="/assets/tnp-logo.jpg" alt="TrustedNutraProduct">
+    <h1 class="mg-title">TrustedNutraProduct ka Khazana</h1>
+    <p class="mg-sub">
+        Affiliates ke liye Trusted Nutra ki taraf se poori offers directory —
+        top platforms, networks, high-AOV offers, EPC, CPA aur premium RevShare deals
+        ek hi jagah.
+    </p>
+    <div class="mg-pills">
+        <span class="mg-pill highlight">High AOV</span>
+        <span class="mg-pill highlight">Top EPC</span>
+        <span class="mg-pill highlight">CPA Deals</span>
+        <span class="mg-pill">BuyGoods</span>
+        <span class="mg-pill">ClickBank</span>
+        <span class="mg-pill">Digistore24</span>
+        <span class="mg-pill">MaxWeb</span>
+    </div>
+    <div class="mg-desktop-note">
+        <strong>📺 Isi page ko Desktop / Laptop se kholein</strong> —
+        poori offer directory, Promote Now links, aur filters sirf desktop par best
+        experience dete hain. Mobile ke liye yeh optimize nahi hai.
+    </div>
+    <div class="mg-contact">
+        <a class="mg-email" href="mailto:contact@trustednutraproduct.com" aria-label="Email us">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+            Email
+        </a>
+        <a class="mg-tg" href="https://t.me/TrustedNutraProduct" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Telegram
+        </a>
+    </div>
+    <p class="mg-foot">© <?= date('Y') ?> TrustedNutraProduct · Affiliates Directory</p>
+</section>
+
 <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle filters sidebar" title="Toggle filters">
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
 </button>
@@ -219,6 +258,8 @@ foreach ($offers as $o) {
                                 $o['category'], $o['allowed_geos']
                             ]));
                             $restriction_val = $o['restriction'] ?: 'No';
+                            $soon = !empty($o['coming_soon']);
+                            $blank = $soon ? coming_soon_chip() : '<span class="muted">—</span>';
                         ?>
                             <tr data-search="<?= h($search_text) ?>"
                                 data-category="<?= h($o['category']) ?>"
@@ -229,26 +270,38 @@ foreach ($offers as $o) {
                                 <td class="product-cell">
                                     <?php if (!empty($o['image_url'])): ?>
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="<?= h($o['offer_name']) ?>">
+                                    <?php elseif ($soon): ?>
+                                        <span class="thumb-empty thumb-soon">Soon</span>
                                     <?php else: ?>
                                         <span class="thumb-empty">—</span>
                                     <?php endif; ?>
                                     <?php if (!empty($o['platform'])): ?>
                                         <span class="<?= platform_class($o['platform']) ?>"><?= h($o['platform']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td class="offer-cell">
-                                    <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php if (!empty($o['offer_name'])): ?>
+                                        <span class="offer-name"><?= h($o['offer_name']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <span class="offer-name muted">Coming Soon</span>
+                                    <?php endif; ?>
                                     <?php if (!empty($o['offer_id'])): ?>
                                         <?php $id_label = (strcasecmp($o['platform'] ?? '', 'ClickBank') === 0) ? 'Nickname' : 'Offer ID'; ?>
                                         <span class="offer-id"><?= $id_label ?>: <?= h($o['offer_id']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <span class="offer-id"><?= $blank ?></span>
                                     <?php endif; ?>
                                     <?php if (!empty($o['category'])): ?>
                                         <span class="<?= category_class($o['category']) ?>"><?= h($o['category']) ?></span>
+                                    <?php elseif ($soon): ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
                                     <?php if (empty($landers)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <div class="landers">
                                         <?php foreach ($landers as $l):
@@ -296,7 +349,7 @@ foreach ($offers as $o) {
                                         }
                                     ?>
                                     <?php if (empty($offer_links)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <div class="offer-links">
                                         <?php foreach ($offer_links as $ln):
@@ -318,7 +371,7 @@ foreach ($offers as $o) {
                                         $cpaTip = 'Manually activated CPA — Ask the admin to unlock it, or complete 10 sales on RevShare and it will be activated for you automatically.';
                                     ?>
                                     <?php if (!$hasRev && !$hasCpa): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <?php if ($hasRev): ?>
                                             <div class="commission-rev"><strong><?= h($o['revshare']) ?></strong> Revshare</div>
@@ -344,8 +397,10 @@ foreach ($offers as $o) {
                                             Tier-1 (39 Countries)
                                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                                         </button>
-                                    <?php else: ?>
+                                    <?php elseif (!empty($o['allowed_geos'])): ?>
                                         <?= h($o['allowed_geos']) ?>
+                                    <?php else: ?>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -353,7 +408,7 @@ foreach ($offers as $o) {
                                         $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
                                     ?>
                                     <?php if (empty($tips)): ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php else: ?>
                                         <ul class="tip-list">
                                         <?php foreach ($tips as $t):
@@ -409,7 +464,7 @@ foreach ($offers as $o) {
                                             Promote Now
                                         </a>
                                     <?php else: ?>
-                                        <span class="muted">—</span>
+                                        <?= $blank ?>
                                     <?php endif; ?>
                                 </td>
                             </tr>
