@@ -22,9 +22,9 @@ try {
 
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers,
-             affiliate_page_url, revshare, cpa, allowed_geos, restriction, shaver_domain_id)
+             affiliate_page_url, links, revshare, cpa, allowed_geos, restriction, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers,
-                    :affiliate_page_url, :revshare, :cpa, :allowed_geos, :restriction, :shaver_domain_id)");
+                    :affiliate_page_url, :links, :revshare, :cpa, :allowed_geos, :restriction, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
         $params[':shaver_domain_id'] = !empty($data['shaver_domain_id']) ? (int)$data['shaver_domain_id'] : null;
@@ -40,7 +40,7 @@ try {
         $stmt = $pdo->prepare("UPDATE offers SET
             sr = :sr, platform = :platform, offer_name = :offer_name, image_url = :image_url,
             offer_id = :offer_id, category = :category, top_landers = :top_landers,
-            affiliate_page_url = :affiliate_page_url, revshare = :revshare, cpa = :cpa,
+            affiliate_page_url = :affiliate_page_url, links = :links, revshare = :revshare, cpa = :cpa,
             allowed_geos = :allowed_geos, restriction = :restriction
             WHERE id = :id");
         $params = bind($data);
@@ -133,6 +133,17 @@ function read_json(): array {
 function bind(array $d): array {
     $landers = $d['top_landers'] ?? [];
     if (!is_array($landers)) $landers = [];
+    $links = $d['links'] ?? [];
+    if (!is_array($links)) $links = [];
+    // Keep affiliate_page_url in sync with the first "Affiliate Page" entry
+    // (backwards compatibility for code that still reads that column).
+    $aff_url = (string)($d['affiliate_page_url'] ?? '');
+    foreach ($links as $ln) {
+        if (($ln['title'] ?? '') === 'Affiliate Page' && !empty($ln['url'])) {
+            $aff_url = (string)$ln['url'];
+            break;
+        }
+    }
     return [
         ':sr' => (int)($d['sr'] ?? 0),
         ':platform' => (string)($d['platform'] ?? ''),
@@ -141,7 +152,8 @@ function bind(array $d): array {
         ':offer_id' => (string)($d['offer_id'] ?? ''),
         ':category' => (string)($d['category'] ?? ''),
         ':top_landers' => json_encode($landers),
-        ':affiliate_page_url' => (string)($d['affiliate_page_url'] ?? ''),
+        ':affiliate_page_url' => $aff_url,
+        ':links' => json_encode($links),
         ':revshare' => (string)($d['revshare'] ?? ''),
         ':cpa' => (string)($d['cpa'] ?? ''),
         ':allowed_geos' => (string)($d['allowed_geos'] ?? ''),

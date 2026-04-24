@@ -55,6 +55,12 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("CREATE INDEX idx_offers_shaver_domain_id ON offers(shaver_domain_id)");
     }
 
+    // Arbitrary titled links per offer (Affiliate Page / Creatives / Traffic Tips / Ad Copy Swipes)
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'links'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN links TEXT NULL AFTER affiliate_page_url");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (

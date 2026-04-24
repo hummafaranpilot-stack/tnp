@@ -1,4 +1,5 @@
 let landers = [];
+let links = [];
 let editingId = null;
 let currentShaverDomainId = null; // set when opening form from a Shaver suggestion
 let editingLanderIdx = null;      // index of lander being inline-edited, if any
@@ -75,7 +76,6 @@ function openForm(offer = null) {
     document.getElementById('f_cpa').value = offer?.cpa || '';
     document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1 Default';
     document.getElementById('f_restriction').value = offer?.restriction || 'No';
-    document.getElementById('f_affiliate_page_url').value = offer?.affiliate_page_url || '';
 
     // Image reset
     const imgUrl = offer?.image_url || '';
@@ -95,14 +95,27 @@ function openForm(offer = null) {
     }
     renderLanders();
 
+    // Links from offer (editing). Fall back to the legacy affiliate_page_url
+    // so old records show up as a seed "Affiliate Page" row.
+    links = [];
+    if (offer?.links) {
+        try {
+            const parsed = typeof offer.links === 'string' ? JSON.parse(offer.links) : offer.links;
+            if (Array.isArray(parsed)) links = parsed;
+        } catch (_) {}
+    }
+    if (links.length === 0 && offer?.affiliate_page_url) {
+        links = [{ title: 'Affiliate Page', url: offer.affiliate_page_url }];
+    }
+    renderLinks();
+
     // Reset prefilled state
     clearAllPrefilled();
 
     // Mark Shaver-sourced fields as prefilled (yellow)
     if (isFromShaver) {
-        if (offer.offer_name)         markPrefilled('f_offer_name');
-        if (offer.platform)           markPrefilled('f_platform');
-        if (offer.affiliate_page_url) markPrefilled('f_affiliate_page_url');
+        if (offer.offer_name) markPrefilled('f_offer_name');
+        if (offer.platform)   markPrefilled('f_platform');
     }
 
     // Apply platform defaults from past offers (learning)
@@ -177,11 +190,13 @@ async function fetchTopLandersAsync(domain_id) {
         }
         // Affiliate URL detected from traffic (contains "afftools"/"affiliate")
         if (result.affiliate_url) {
-            const aff = document.getElementById('f_affiliate_page_url');
-            if (!aff.value.trim() || aff.classList.contains('prefilled')) {
-                aff.value = result.affiliate_url;
-                markPrefilled('f_affiliate_page_url');
+            const existing = links.find(l => l.title === 'Affiliate Page');
+            if (existing) {
+                existing.url = result.affiliate_url;
+            } else {
+                links.unshift({ title: 'Affiliate Page', url: result.affiliate_url });
             }
+            renderLinks();
         }
         // Top landers (overwrites only if no manual edits yet)
         if (Array.isArray(result.landers) && result.landers.length > 0) {
@@ -207,6 +222,7 @@ function closeForm() {
     document.getElementById('modal').classList.add('hidden');
     editingId = null;
     landers = [];
+    links = [];
     clearAllPrefilled();
 }
 
@@ -266,6 +282,71 @@ async function uploadImage(input) {
     }
 }
 
+function adviceTypeFor(advice) {
+    const a = (advice || '').toLowerCase().trim();
+    if (a === 'prelander' || a === 'pre-lander')        return 'short';
+    if (a === 'direct-link' || a === 'direct link')     return 'long';
+    if (a === 'vsl')                                    return 'vsl';
+    return 'custom';
+}
+
+function adviceDescription(advice) {
+    const a = (advice || '').toLowerCase().trim();
+    if (a === 'prelander' || a === 'pre-lander')        return 'Prelander — best for warming up cold traffic before landing on this page.';
+    if (a === 'direct-link' || a === 'direct link')     return 'Direct link — the long copy already does the persuasion itself, no prelander needed.';
+    if (a === 'vsl')                                    return 'VSL (Video Sales Letter) — best for viewers who prefer to watch videos over reading.';
+    return '';
+}
+
+function addLink() {
+    const title = document.getElementById('link_title').value;
+    const url = document.getElementById('link_url').value.trim();
+    if (!title || !url) return;
+    links.push({ title, url });
+    document.getElementById('link_url').value = '';
+    renderLinks();
+}
+
+function removeLink(i) {
+    links.splice(i, 1);
+    renderLinks();
+}
+
+function moveLink(i, delta) {
+    const j = i + delta;
+    if (j < 0 || j >= links.length) return;
+    [links[i], links[j]] = [links[j], links[i]];
+    renderLinks();
+}
+
+function renderLinks() {
+    const box = document.getElementById('linksList');
+    if (!box) return;
+    box.innerHTML = '';
+    links.forEach((l, i) => {
+        const row = document.createElement('div');
+        row.className = 'lander-item';
+        const upDisabled = i === 0 ? 'disabled' : '';
+        const downDisabled = i === links.length - 1 ? 'disabled' : '';
+        row.innerHTML = `
+            <div class="lander-reorder">
+                <button type="button" class="reorder-btn" ${upDisabled} onclick="moveLink(${i}, -1)" title="Move up" aria-label="Move up">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+                </button>
+                <button type="button" class="reorder-btn" ${downDisabled} onclick="moveLink(${i}, 1)" title="Move down" aria-label="Move down">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+            </div>
+            <div class="lander-main">
+                <span class="label">${escapeHtml(l.title)}</span>
+                <span class="url">${escapeHtml(l.url)}</span>
+            </div>
+            <button type="button" class="remove" onclick="removeLink(${i})" title="Remove">&times;</button>
+        `;
+        box.appendChild(row);
+    });
+}
+
 function addLander() {
     const label = document.getElementById('lander_label').value.trim();
     const url = document.getElementById('lander_url').value.trim();
@@ -275,11 +356,7 @@ function addLander() {
     const lander = { label, url };
     if (advice) {
         lander.advice = advice;
-        // Map common values to known color types; anything else renders as 'custom'
-        const a = advice.toLowerCase();
-        if (a === 'prelander' || a === 'pre-lander') lander.type = 'short';
-        else if (a === 'direct-link' || a === 'direct link') lander.type = 'long';
-        else lander.type = 'custom';
+        lander.type = adviceTypeFor(advice);
     }
     landers.push(lander);
     document.getElementById('lander_label').value = '';
@@ -326,10 +403,7 @@ function saveLanderEdit(i) {
     const updated = { label, url };
     if (advice) {
         updated.advice = advice;
-        const a = advice.toLowerCase();
-        if (a === 'prelander' || a === 'pre-lander')     updated.type = 'short';
-        else if (a === 'direct-link' || a === 'direct link') updated.type = 'long';
-        else updated.type = 'custom';
+        updated.type   = adviceTypeFor(advice);
     }
     if (landers[i].visits)    updated.visits    = landers[i].visits;
     if (landers[i].prefilled) updated.prefilled = false;
@@ -377,10 +451,20 @@ function renderLanders() {
 
         if (editingLanderIdx === i) {
             row.className = 'lander-item editing';
+            const current = l.advice || '';
+            const known = ['prelander', 'direct-link', 'VSL'];
+            const hasCustom = current && !known.some(k => k.toLowerCase() === current.toLowerCase());
+            const options = [
+                `<option value="">— Capsule —</option>`,
+                `<option value="prelander"${current.toLowerCase() === 'prelander' ? ' selected' : ''}>prelander</option>`,
+                `<option value="direct-link"${current.toLowerCase() === 'direct-link' ? ' selected' : ''}>direct-link</option>`,
+                `<option value="VSL"${current.toLowerCase() === 'vsl' ? ' selected' : ''}>VSL</option>`,
+                hasCustom ? `<option value="${escapeHtml(current)}" selected>${escapeHtml(current)} (custom)</option>` : '',
+            ].join('');
             row.innerHTML = `
                 <input type="text" class="edit-label"  value="${escapeHtml(l.label || '')}"  placeholder="Label">
                 <input type="url"  class="edit-url"    value="${escapeHtml(l.url || '')}"    placeholder="https://...">
-                <input type="text" class="edit-advice" value="${escapeHtml(l.advice || '')}" placeholder="Capsule (optional)" maxlength="24">
+                <select class="edit-advice">${options}</select>
                 <button type="button" class="lander-save" onclick="saveLanderEdit(${i})" title="Save">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </button>
@@ -400,7 +484,9 @@ function renderLanders() {
         const advice = hasManual ? l.advice : (derived.advice || '');
         const type = hasManual ? (l.type || 'custom')
                                : (derived.type !== 'other' ? derived.type : 'other');
-        const description = hasManual ? '' : (derived.description || '');
+        const description = hasManual
+            ? adviceDescription(advice)
+            : (derived.description || '');
         const visitsBadge = l.visits ? `<span class="visits-tag">${l.visits} visits</span>` : '';
         const adviceChip = advice
             ? `<span class="advice-chip advice-${type}"${description ? ` data-tip="${escapeHtml(description)}"` : ''}>${escapeHtml(advice)}</span>`
@@ -448,7 +534,7 @@ async function submitForm(e) {
         cpa: document.getElementById('f_cpa').value,
         allowed_geos: document.getElementById('f_allowed_geos').value,
         restriction: document.getElementById('f_restriction').value,
-        affiliate_page_url: document.getElementById('f_affiliate_page_url').value,
+        links: links.map(({ title, url }) => ({ title, url })),
         top_landers: landers.map(l => {
             const out = { label: l.label, url: l.url };
             if (l.advice) out.advice = l.advice;

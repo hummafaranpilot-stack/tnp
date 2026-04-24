@@ -287,7 +287,8 @@ foreach ($counts as $p => $fields) {
                                                 $label  = $l['label'] ?? $info['label'];
                                                 $type   = $l['type'] ?? 'custom';
                                                 $advice = $l['advice'];
-                                                $tip    = '';
+                                                $desc   = advice_description($advice);
+                                                $tip    = $desc ? $advice . ' — ' . $desc : '';
                                             } else {
                                                 $label  = $info['type'] !== 'other' ? $info['label'] : ($l['label'] ?? $info['label']);
                                                 $type   = $info['type'];
@@ -308,13 +309,25 @@ foreach ($counts as $p => $fields) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (!empty($o['affiliate_page_url'])): ?>
-                                        <a class="link" href="<?= h($o['affiliate_page_url']) ?>" target="_blank" rel="noopener noreferrer">
-                                            Affiliate Page
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
-                                        </a>
-                                    <?php else: ?>
+                                    <?php
+                                        $offer_links = json_decode($o['links'] ?? '[]', true) ?: [];
+                                        if (empty($offer_links) && !empty($o['affiliate_page_url'])) {
+                                            $offer_links = [['title' => 'Affiliate Page', 'url' => $o['affiliate_page_url']]];
+                                        }
+                                    ?>
+                                    <?php if (empty($offer_links)): ?>
                                         <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <div class="offer-links">
+                                        <?php foreach ($offer_links as $ln):
+                                            if (empty($ln['url'])) continue;
+                                        ?>
+                                            <a class="link" href="<?= h($ln['url']) ?>" target="_blank" rel="noopener noreferrer">
+                                                <?= h($ln['title'] ?? 'Link') ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                            </a>
+                                        <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="rev"><?= h($o['revshare']) ?></td>
@@ -417,13 +430,31 @@ foreach ($counts as $p => $fields) {
                     <label>Restriction <span class="field-hint" id="hint_restriction"></span></label>
                     <select name="restriction" id="f_restriction"><option>No</option><option>Yes</option></select>
                 </div>
-                <div class="full"><label>Affiliate / Creative Page URL</label><input type="url" name="affiliate_page_url" id="f_affiliate_page_url" placeholder="https://..."></div>
+                <div class="full">
+                    <label>Links</label>
+                    <div class="lander-row">
+                        <select id="link_title">
+                            <option value="Affiliate Page">Affiliate Page</option>
+                            <option value="Creatives">Creatives</option>
+                            <option value="Traffic Tips">Traffic Tips</option>
+                            <option value="Ad Copy Swipes">Ad Copy Swipes</option>
+                        </select>
+                        <input type="url" id="link_url" placeholder="https://...">
+                        <button type="button" class="btn btn-primary" onclick="addLink()">+ Add</button>
+                    </div>
+                    <div id="linksList" class="landers-list"></div>
+                </div>
                 <div class="full">
                     <label>Top Landers <span class="field-hint" id="hint_landers"></span></label>
                     <div class="lander-row">
                         <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
                         <input type="url" id="lander_url" placeholder="https://...">
-                        <input type="text" id="lander_advice" placeholder="Capsule (optional)" maxlength="24">
+                        <select id="lander_advice" title="Capsule type">
+                            <option value="">— Capsule (optional) —</option>
+                            <option value="prelander">prelander</option>
+                            <option value="direct-link">direct-link</option>
+                            <option value="VSL">VSL</option>
+                        </select>
                         <button type="button" class="btn btn-primary" onclick="addLander()">+ Add</button>
                     </div>
                     <div id="landersList" class="landers-list"></div>

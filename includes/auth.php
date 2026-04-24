@@ -54,3 +54,16 @@ function category_class(string $c): string {
         default            => 'pill pill-slate',
     };
 }
+
+/**
+ * Description shown in the hover tooltip for a manually-chosen
+ * capsule value (prelander / direct-link / VSL).
+ */
+function advice_description(string $advice): string {
+    return match (strtolower(trim($advice))) {
+        'prelander', 'pre-lander'       => 'Prelander — best for warming up cold traffic before landing on this page.',
+        'direct-link', 'direct link'    => 'Direct link — the long copy already does the persuasion itself, no prelander needed.',
+        'vsl'                           => 'VSL (Video Sales Letter) — best for viewers who prefer to watch videos over reading.',
+        default                         => '',
+    };
+}

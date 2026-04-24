@@ -263,7 +263,8 @@ foreach ($offers as $o) {
                                                 $label  = $l['label'] ?? $info['label'];
                                                 $type   = $l['type'] ?? 'custom';
                                                 $advice = $l['advice'];
-                                                $tip    = '';
+                                                $desc   = advice_description($advice);
+                                                $tip    = $desc ? $advice . ' — ' . $desc : '';
                                             } else {
                                                 $label  = $info['type'] !== 'other' ? $info['label'] : ($l['label'] ?? $info['label']);
                                                 $type   = $info['type'];
@@ -284,13 +285,25 @@ foreach ($offers as $o) {
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <?php if (!empty($o['affiliate_page_url'])): ?>
-                                        <a class="link" href="<?= h($o['affiliate_page_url']) ?>" target="_blank" rel="noopener noreferrer">
-                                            Affiliate Page
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
-                                        </a>
-                                    <?php else: ?>
+                                    <?php
+                                        $offer_links = json_decode($o['links'] ?? '[]', true) ?: [];
+                                        if (empty($offer_links) && !empty($o['affiliate_page_url'])) {
+                                            $offer_links = [['title' => 'Affiliate Page', 'url' => $o['affiliate_page_url']]];
+                                        }
+                                    ?>
+                                    <?php if (empty($offer_links)): ?>
                                         <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <div class="offer-links">
+                                        <?php foreach ($offer_links as $ln):
+                                            if (empty($ln['url'])) continue;
+                                        ?>
+                                            <a class="link" href="<?= h($ln['url']) ?>" target="_blank" rel="noopener noreferrer">
+                                                <?= h($ln['title'] ?? 'Link') ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                            </a>
+                                        <?php endforeach; ?>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="rev"><?= h($o['revshare']) ?></td>
