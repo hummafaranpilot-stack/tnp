@@ -1,6 +1,7 @@
 let landers = [];
 let editingId = null;
 let currentShaverDomainId = null; // set when opening form from a Shaver suggestion
+let editingLanderIdx = null;      // index of lander being inline-edited, if any
 
 function getNextSr() {
     const el = document.querySelector('main[data-next-sr]');
@@ -288,6 +289,7 @@ function addLander() {
 }
 
 function removeLander(i) {
+    if (editingLanderIdx === i) editingLanderIdx = null;
     landers.splice(i, 1);
     renderLanders();
 }
@@ -296,6 +298,43 @@ function moveLander(i, delta) {
     const j = i + delta;
     if (j < 0 || j >= landers.length) return;
     [landers[i], landers[j]] = [landers[j], landers[i]];
+    renderLanders();
+}
+
+function editLander(i) {
+    editingLanderIdx = i;
+    renderLanders();
+    setTimeout(() => {
+        const el = document.querySelector('.lander-item.editing .edit-label');
+        if (el) { el.focus(); el.select(); }
+    }, 0);
+}
+
+function cancelLanderEdit() {
+    editingLanderIdx = null;
+    renderLanders();
+}
+
+function saveLanderEdit(i) {
+    const row = document.querySelector(`.lander-item[data-idx="${i}"]`);
+    if (!row) return;
+    const label  = row.querySelector('.edit-label').value.trim();
+    const url    = row.querySelector('.edit-url').value.trim();
+    const advice = row.querySelector('.edit-advice').value.trim();
+    if (!label || !url) return;
+
+    const updated = { label, url };
+    if (advice) {
+        updated.advice = advice;
+        const a = advice.toLowerCase();
+        if (a === 'prelander' || a === 'pre-lander')     updated.type = 'short';
+        else if (a === 'direct-link' || a === 'direct link') updated.type = 'long';
+        else updated.type = 'custom';
+    }
+    if (landers[i].visits)    updated.visits    = landers[i].visits;
+    if (landers[i].prefilled) updated.prefilled = false;
+    landers[i] = updated;
+    editingLanderIdx = null;
     renderLanders();
 }
 
@@ -334,9 +373,27 @@ function renderLanders() {
     box.innerHTML = '';
     landers.forEach((l, i) => {
         const row = document.createElement('div');
+        row.dataset.idx = i;
+
+        if (editingLanderIdx === i) {
+            row.className = 'lander-item editing';
+            row.innerHTML = `
+                <input type="text" class="edit-label"  value="${escapeHtml(l.label || '')}"  placeholder="Label">
+                <input type="url"  class="edit-url"    value="${escapeHtml(l.url || '')}"    placeholder="https://...">
+                <input type="text" class="edit-advice" value="${escapeHtml(l.advice || '')}" placeholder="Capsule (optional)" maxlength="24">
+                <button type="button" class="lander-save" onclick="saveLanderEdit(${i})" title="Save">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </button>
+                <button type="button" class="lander-cancel" onclick="cancelLanderEdit()" title="Cancel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            `;
+            box.appendChild(row);
+            return;
+        }
+
         row.className = 'lander-item' + (l.prefilled ? ' prefilled' : '');
         const derived = deriveLanderType(l.url);
-        // Manual entries (with their own advice/type) win over URL-derived.
         const hasManual = Boolean(l.advice);
         const label = hasManual ? (l.label || derived.label || 'Lander')
                                 : (derived.label || l.label || 'Lander');
@@ -363,6 +420,9 @@ function renderLanders() {
                 <span class="label">${escapeHtml(label)}${adviceChip}${visitsBadge}</span>
                 <span class="url">${escapeHtml(l.url)}</span>
             </div>
+            <button type="button" class="lander-edit" onclick="editLander(${i})" title="Edit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </button>
             <button type="button" class="remove" onclick="removeLander(${i})" title="Remove">&times;</button>
         `;
         box.appendChild(row);
@@ -389,7 +449,12 @@ async function submitForm(e) {
         allowed_geos: document.getElementById('f_allowed_geos').value,
         restriction: document.getElementById('f_restriction').value,
         affiliate_page_url: document.getElementById('f_affiliate_page_url').value,
-        top_landers: landers.map(({ label, url }) => ({ label, url })),
+        top_landers: landers.map(l => {
+            const out = { label: l.label, url: l.url };
+            if (l.advice) out.advice = l.advice;
+            if (l.type)   out.type   = l.type;
+            return out;
+        }),
         shaver_domain_id: editingId ? null : currentShaverDomainId,
     };
 

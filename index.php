@@ -230,7 +230,7 @@ foreach ($offers as $o) {
                                 <th>Platform</th>
                                 <th>Offer</th>
                                 <th>Top Landers</th>
-                                <th>Affiliate Page</th>
+                                <th>Links</th>
                                 <th>RevShare</th>
                                 <th>CPA</th>
                                 <th>GEOs</th>
@@ -275,21 +275,27 @@ foreach ($offers as $o) {
                                     <?php else: ?>
                                         <div class="landers">
                                         <?php foreach ($landers as $l):
-                                            $lurl  = $l['url'] ?? '#';
-                                            $info  = lander_info_from_url($lurl);
-                                            $label = $info['type'] !== 'other'
-                                                ? $info['label']
-                                                : ($l['label'] ?? $info['label']);
-                                            $tip   = $info['description']
-                                                ? $info['label'] . ' — ' . $info['description']
-                                                : '';
+                                            $lurl    = $l['url'] ?? '#';
+                                            $info    = lander_info_from_url($lurl);
+                                            $hasMan  = !empty($l['advice']);
+                                            if ($hasMan) {
+                                                $label  = $l['label'] ?? $info['label'];
+                                                $type   = $l['type'] ?? 'custom';
+                                                $advice = $l['advice'];
+                                                $tip    = '';
+                                            } else {
+                                                $label  = $info['type'] !== 'other' ? $info['label'] : ($l['label'] ?? $info['label']);
+                                                $type   = $info['type'];
+                                                $advice = $info['advice'];
+                                                $tip    = $info['description'] ? $info['label'] . ' — ' . $info['description'] : '';
+                                            }
                                         ?>
                                             <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
                                                class="lander-link"
                                                <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
                                                 <span class="lander-name"><?= h($label) ?></span>
-                                                <?php if ($info['advice']): ?>
-                                                    <span class="advice-chip advice-<?= h($info['type']) ?>"><?= h($info['advice']) ?></span>
+                                                <?php if ($advice): ?>
+                                                    <span class="advice-chip advice-<?= h($type) ?>"><?= h($advice) ?></span>
                                                 <?php endif; ?>
                                             </a>
                                         <?php endforeach; ?>
@@ -299,7 +305,7 @@ foreach ($offers as $o) {
                                 <td>
                                     <?php if (!empty($o['affiliate_page_url'])): ?>
                                         <a class="link" href="<?= h($o['affiliate_page_url']) ?>" target="_blank" rel="noopener noreferrer">
-                                            Click Here
+                                            Affiliate Page
                                             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
                                         </a>
                                     <?php else: ?>
