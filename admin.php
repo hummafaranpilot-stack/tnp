@@ -299,13 +299,15 @@ foreach ($counts as $p => $fields) {
                                             <a href="<?= h($lurl) ?>" target="_blank" rel="noopener noreferrer"
                                                class="lander-link"
                                                <?= $tip ? 'data-tip="' . h($tip) . '" aria-label="' . h($tip) . '"' : '' ?>>
-                                                <span class="lander-name">
-                                                    <?= h($label) ?>
-                                                    <svg class="lander-arrow" xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
-                                                </span>
                                                 <?php if ($advice): ?>
                                                     <span class="advice-chip advice-<?= h($type) ?>"><?= h($advice) ?></span>
+                                                <?php else: ?>
+                                                    <span class="advice-slot"></span>
                                                 <?php endif; ?>
+                                                <span class="lander-name">
+                                                    <?= h($label) ?>
+                                                    <svg class="lander-arrow" xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l10-10"/><path d="M7 7h10v10"/></svg>
+                                                </span>
                                             </a>
                                         <?php endforeach; ?>
                                         </div>

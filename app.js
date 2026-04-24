@@ -566,7 +566,7 @@ function renderLanders() {
                 </button>
             </div>
             <div class="lander-main">
-                <span class="label">${escapeHtml(label)}${adviceChip}${visitsBadge}</span>
+                <span class="label">${adviceChip}${escapeHtml(label)}${visitsBadge}</span>
                 <span class="url">${escapeHtml(l.url)}</span>
             </div>
             <button type="button" class="lander-edit" onclick="editLander(${i})" title="Edit">
