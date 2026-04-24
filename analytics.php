@@ -5,6 +5,13 @@ require __DIR__ . '/includes/db.php';
 
 $pdo = get_pdo();
 
+// `partial=1` returns only the live-refreshing block (stats + table +
+// pagination) — used by the 1-second auto-refresh fetch. Same URL
+// otherwise renders the full chrome. We buffer the entire output and
+// slice the inner block out on the way out.
+$is_partial = !empty($_GET['partial']);
+ob_start();
+
 // Filters
 $range   = $_GET['range']   ?? '7d';
 $device  = trim((string)($_GET['device']  ?? ''));
@@ -125,8 +132,13 @@ function short_url(string $url): string {
     <main class="admin-main">
         <div class="admin-topbar">
             <div>
-                <h1>Analytics</h1>
-                <p class="subtitle">Visitor traffic to the public offers directory.</p>
+                <h1>Analytics
+                    <span id="live-dot" class="live-indicator" title="Auto-refreshing every second">
+                        <span class="live-dot-pulse"></span>
+                        LIVE
+                    </span>
+                </h1>
+                <p class="subtitle">Visitor traffic to the public offers directory. Auto-refreshing every second.</p>
             </div>
         </div>
 
@@ -170,6 +182,8 @@ function short_url(string $url): string {
             </div>
         </form>
 
+        <!-- Live block (stats + table + pagination) — auto-refreshed every second -->
+        <div id="analytics-live">
         <!-- Stats -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -318,11 +332,65 @@ function short_url(string $url): string {
                 </nav>
             <?php endif; ?>
         <?php endif; ?>
+        </div><!-- /#analytics-live -->
+
+        <!-- Auto-refresh the live block every second -->
+        <script>
+        (function () {
+            const host = document.getElementById('analytics-live');
+            if (!host) return;
+            const indicator = document.getElementById('live-dot');
+            const url = () => {
+                const u = new URL(window.location.href);
+                u.searchParams.set('partial', '1');
+                return u.toString();
+            };
+            let inflight = false;
+            async function refresh() {
+                if (document.hidden || inflight) return;
+                inflight = true;
+                try {
+                    const res = await fetch(url(), { credentials: 'same-origin', cache: 'no-store' });
+                    if (!res.ok) return;
+                    const html = await res.text();
+                    // Swap only if the user hasn't opened a <details> click-expand
+                    // or is hovering a row (avoid yanking the UI mid-interaction).
+                    const openDetails = host.querySelector('details[open]');
+                    const hovering = host.matches(':hover');
+                    if (openDetails || hovering) return;
+                    host.innerHTML = html;
+                    if (indicator) indicator.classList.add('pulse');
+                    setTimeout(() => indicator && indicator.classList.remove('pulse'), 250);
+                } catch (_) {
+                    // network hiccup — try again next tick
+                } finally {
+                    inflight = false;
+                }
+            }
+            setInterval(refresh, 1000);
+            document.addEventListener('visibilitychange', () => { if (!document.hidden) refresh(); });
+        })();
+        </script>
     </main>
 </div>
 </body>
 </html>
 <?php
+$__html = ob_get_clean();
+if ($is_partial) {
+    // Extract the inner HTML of #analytics-live for the AJAX refresh.
+    $start_marker = '<div id="analytics-live">';
+    $end_marker   = '</div><!-- /#analytics-live -->';
+    $start = strpos($__html, $start_marker);
+    $end   = strpos($__html, $end_marker);
+    if ($start !== false && $end !== false) {
+        $inner_start = $start + strlen($start_marker);
+        echo substr($__html, $inner_start, $end - $inner_start);
+    }
+    exit;
+}
+echo $__html;
+
 function human_time_ago(int $ts): string {
     $diff = time() - $ts;
     if ($diff < 60)    return $diff . 's ago';

@@ -2658,6 +2658,37 @@ form.coming-soon-on .required { opacity: 0.3; }
 /* ============================================
    Analytics admin page
    ============================================ */
+.live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 3px 10px 3px 8px;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border: 1px solid #fca5a5;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #b91c1c;
+    vertical-align: middle;
+    transition: transform 0.2s;
+}
+.live-indicator.pulse { transform: scale(1.06); }
+.live-dot-pulse {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    animation: live-pulse 1.5s infinite;
+}
+@keyframes live-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 .analytics-filters { margin: 1.25rem 0 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .range-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .range-chip {
