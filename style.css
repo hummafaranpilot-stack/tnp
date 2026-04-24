@@ -1346,17 +1346,21 @@ main.page { padding: 2rem 0 4rem; }
     margin-left: 2px;
 }
 
-/* Prefilled fields (from Shaver OR learned defaults) */
+/* Prefilled fields (from Shaver OR learned defaults) — !important because
+   the .form-section white-background rule sits at equal specificity */
 .grid input.prefilled,
-.grid select.prefilled {
-    background-color: #fefce8;
-    border-color: #fde68a;
+.grid select.prefilled,
+.form-section input.prefilled,
+.form-section select.prefilled {
+    background-color: #fefce8 !important;
+    border-color: #fde68a !important;
 }
 .grid input.prefilled:focus,
-.grid select.prefilled:focus {
-    background-color: #fefce8;
-    border-color: #facc15;
-    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25);
+.grid select.prefilled:focus,
+.form-section input.prefilled:focus,
+.form-section select.prefilled:focus {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.25) !important;
 }
 
 .lander-item.prefilled {

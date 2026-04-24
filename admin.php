@@ -421,13 +421,16 @@ foreach ($counts as $p => $fields) {
                 <div class="grid">
                     <div><label>Sr # <span class="required">*</span></label><input type="number" name="sr" id="f_sr" required></div>
                     <div>
-                        <label>Platform <span class="required">*</span></label>
+                        <label>Platform <span class="required">*</span> <span class="field-hint" id="hint_platform"></span></label>
                         <select name="platform" id="f_platform" required>
                             <option>BuyGoods</option><option>ClickBank</option><option>Digistore24</option><option>MaxWeb</option><option>Other</option>
                         </select>
                     </div>
                     <div class="full"><label>Offer Name <span class="required">*</span></label><input type="text" name="offer_name" id="f_offer_name" required></div>
-                    <div><label>Offer ID / Nickname</label><input type="text" name="offer_id" id="f_offer_id"></div>
+                    <div>
+                        <label>Offer ID / Nickname <span class="field-hint" id="hint_offer_id"></span></label>
+                        <input type="text" name="offer_id" id="f_offer_id">
+                    </div>
                     <div>
                         <label>Category <span class="field-hint" id="hint_category"></span></label>
                         <select name="category" id="f_category">
@@ -497,6 +500,7 @@ foreach ($counts as $p => $fields) {
                 <h4 class="section-head-label">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                     Links
+                    <span class="field-hint" id="hint_links"></span>
                 </h4>
                 <div class="lander-row">
                     <select id="link_title">

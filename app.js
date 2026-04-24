@@ -21,12 +21,15 @@ function ensureSelectOption(selectId, value) {
     }
 }
 
-function markPrefilled(elId) {
+function markPrefilled(elId, hintText) {
     const el = document.getElementById(elId);
     if (!el) return;
     el.classList.add('prefilled');
+    const hintId = 'hint_' + elId.replace(/^f_/, '');
+    if (hintText) setHint(hintId, hintText);
     const clear = () => {
         el.classList.remove('prefilled');
+        clearHint(hintId);
         el.removeEventListener('input', clear);
         el.removeEventListener('change', clear);
     };
@@ -133,8 +136,9 @@ function openForm(offer = null) {
 
     // Mark Shaver-sourced fields as prefilled (yellow)
     if (isFromShaver) {
-        if (offer.offer_id) markPrefilled('f_offer_id');
-        if (offer.platform) markPrefilled('f_platform');
+        if (offer.offer_id) markPrefilled('f_offer_id', 'Auto-filled by Shaver');
+        if (offer.platform) markPrefilled('f_platform', 'Auto-filled by Shaver');
+        if (links.length > 0) setHint('hint_links', 'Auto-filled by Shaver');
     }
 
     // Apply platform defaults from past offers (learning)
@@ -170,7 +174,7 @@ function applyPlatformDefaults(platform, isNew) {
         if (el.tagName === 'SELECT') ensureSelectOption('f_' + field, defaults[field]);
         el.value = defaults[field];
         el.classList.add('prefilled');
-        setHint('hint_' + field, 'from past ' + platform + ' offers');
+        setHint('hint_' + field, 'Auto-filled by Previous Offers');
 
         const clear = () => {
             el.classList.remove('prefilled');
