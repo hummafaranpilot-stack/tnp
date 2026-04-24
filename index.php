@@ -58,11 +58,11 @@ foreach ($offers as $o) {
      admin-shell + FAB under 820px; everything else stays as-is. -->
 <section class="mobile-gate" aria-hidden="true">
     <img class="mg-logo" src="/assets/tnp-logo.jpg" alt="TrustedNutraProduct">
-    <h1 class="mg-title">TrustedNutraProduct ka Khazana</h1>
+    <h1 class="mg-title">A Goldmine for Affiliates</h1>
     <p class="mg-sub">
-        Affiliates ke liye Trusted Nutra ki taraf se poori offers directory —
-        top platforms, networks, high-AOV offers, EPC, CPA aur premium RevShare deals
-        ek hi jagah.
+        The complete TrustedNutraProduct offers directory — top platforms, premium
+        networks, high-AOV products, strong EPC, generous CPA and RevShare deals,
+        all in one place.
     </p>
     <div class="mg-pills">
         <span class="mg-pill highlight">High AOV</span>
@@ -74,9 +74,9 @@ foreach ($offers as $o) {
         <span class="mg-pill">MaxWeb</span>
     </div>
     <div class="mg-desktop-note">
-        <strong>📺 Isi page ko Desktop / Laptop se kholein</strong> —
-        poori offer directory, Promote Now links, aur filters sirf desktop par best
-        experience dete hain. Mobile ke liye yeh optimize nahi hai.
+        <strong>📺 Please open this page on a Desktop or Laptop.</strong>
+        The full directory, Promote Now hoplink builder, and filters are built
+        for a larger screen — this mobile view is only a preview.
     </div>
     <div class="mg-contact">
         <a class="mg-email" href="mailto:contact@trustednutraproduct.com" aria-label="Email us">
@@ -88,7 +88,7 @@ foreach ($offers as $o) {
             Telegram
         </a>
     </div>
-    <p class="mg-foot">© <?= date('Y') ?> TrustedNutraProduct · Affiliates Directory</p>
+    <p class="mg-foot">© <?= date('Y') ?> TrustedNutraProduct · Affiliate Directory</p>
 </section>
 
 <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle filters sidebar" title="Toggle filters">
