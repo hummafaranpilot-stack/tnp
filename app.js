@@ -719,43 +719,67 @@ function escapeHtml(s) {
 
 async function submitForm(e) {
     e.preventDefault();
-    const payload = {
-        id: editingId,
-        sr: Number(document.getElementById('f_sr').value) || 0,
-        platform: document.getElementById('f_platform').value,
-        offer_name: document.getElementById('f_offer_name').value,
-        image_url: document.getElementById('f_image_url').value.trim(),
-        offer_id: document.getElementById('f_offer_id').value,
-        category: document.getElementById('f_category').value,
-        revshare: document.getElementById('f_revshare').value,
-        cpa: document.getElementById('f_cpa').value,
-        cpa_manual: document.getElementById('f_cpa_manual')?.checked ? 1 : 0,
-        allowed_geos: document.getElementById('f_allowed_geos').value,
-        restriction: document.getElementById('f_restriction').value,
-        clickbank_redirect_url: document.getElementById('f_cb_url').value.trim(),
-        links: links.map(({ title, url }) => ({ title, url })),
-        traffic_tips: trafficTips.map(({ label, value }) => ({ label, value })),
-        top_landers: landers.map(l => {
-            const out = { label: l.label, url: l.url };
-            if (l.advice) out.advice = l.advice;
-            if (l.type)   out.type   = l.type;
-            return out;
-        }),
-        shaver_domain_id: editingId ? null : currentShaverDomainId,
-        coming_soon: document.getElementById('f_coming_soon')?.checked ? 1 : 0,
+    const saveBtn = e.target?.querySelector('button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+    const restoreBtn = () => {
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Offer'; }
     };
 
-    const action = editingId ? 'update' : 'create';
-    const res = await fetch(`/api.php?action=${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    const result = await res.json();
-    if (result.ok) {
-        window.location.reload();
-    } else {
-        alert('Save failed: ' + (result.error || 'Unknown error'));
+    try {
+        const payload = {
+            id: editingId,
+            sr: Number(document.getElementById('f_sr').value) || 0,
+            platform: document.getElementById('f_platform').value,
+            offer_name: document.getElementById('f_offer_name').value,
+            image_url: document.getElementById('f_image_url').value.trim(),
+            offer_id: document.getElementById('f_offer_id').value,
+            category: document.getElementById('f_category').value,
+            revshare: document.getElementById('f_revshare').value,
+            cpa: document.getElementById('f_cpa').value,
+            cpa_manual: document.getElementById('f_cpa_manual')?.checked ? 1 : 0,
+            allowed_geos: document.getElementById('f_allowed_geos').value,
+            restriction: document.getElementById('f_restriction').value,
+            clickbank_redirect_url: document.getElementById('f_cb_url').value.trim(),
+            links: links.map(({ title, url }) => ({ title, url })),
+            traffic_tips: trafficTips.map(({ label, value }) => ({ label, value })),
+            top_landers: landers.map(l => {
+                const out = { label: l.label, url: l.url };
+                if (l.advice) out.advice = l.advice;
+                if (l.type)   out.type   = l.type;
+                return out;
+            }),
+            shaver_domain_id: editingId ? null : currentShaverDomainId,
+            coming_soon: document.getElementById('f_coming_soon')?.checked ? 1 : 0,
+        };
+
+        const action = editingId ? 'update' : 'create';
+        const res = await fetch(`/api.php?action=${action}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        // Server may return an HTML error page on a 500 — guard JSON parse.
+        let result;
+        try {
+            result = await res.json();
+        } catch (_) {
+            const text = await res.text().catch(() => '');
+            alert(`Save failed: HTTP ${res.status}${text ? ' — ' + text.slice(0, 400) : ''}`);
+            restoreBtn();
+            return;
+        }
+
+        if (result.ok) {
+            window.location.reload();
+        } else {
+            alert('Save failed: ' + (result.error || 'Unknown error'));
+            restoreBtn();
+        }
+    } catch (err) {
+        alert('Save failed: ' + (err?.message || String(err)));
+        restoreBtn();
     }
 }
 
