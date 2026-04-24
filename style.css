@@ -502,7 +502,16 @@ main.page { padding: 2rem 0 4rem; }
 .offer-table td.restr-no { color: var(--success); font-weight: 500; }
 .offer-table td.restr-yes { color: var(--danger); font-weight: 500; }
 
-.landers { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
+.landers {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-start;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: var(--r-md);
+    padding: 0.55rem 0.8rem;
+}
 .lander-link {
     display: inline-flex;
     align-items: center;
