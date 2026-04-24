@@ -395,11 +395,19 @@ function renderTips() {
     const box = document.getElementById('tipsList');
     if (!box) return;
     box.innerHTML = '';
+    const known = ['Restriction', 'Age', 'EPC', 'AOV'];
     trafficTips.forEach((t, i) => {
         const row = document.createElement('div');
-        row.className = 'lander-item';
+        row.className = 'lander-item tip-item';
         const upDisabled = i === 0 ? 'disabled' : '';
         const downDisabled = i === trafficTips.length - 1 ? 'disabled' : '';
+        const currentLabel = t.label || '';
+        const opts = known.map(l =>
+            `<option value="${escapeHtml(l)}"${l === currentLabel ? ' selected' : ''}>${escapeHtml(l)}</option>`
+        ).join('');
+        const extraOpt = known.includes(currentLabel) || !currentLabel
+            ? ''
+            : `<option value="${escapeHtml(currentLabel)}" selected>${escapeHtml(currentLabel)}</option>`;
         row.innerHTML = `
             <div class="lander-reorder">
                 <button type="button" class="reorder-btn" ${upDisabled} onclick="moveTip(${i}, -1)" title="Move up">
@@ -409,14 +417,23 @@ function renderTips() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
             </div>
-            <div class="lander-main">
-                <span class="label">${escapeHtml(t.label)}</span>
-                <span class="url">${escapeHtml(t.value)}</span>
-            </div>
+            <select class="tip-edit-label" onchange="updateTipLabel(${i}, this.value)">${extraOpt}${opts}</select>
+            <input type="text" class="tip-edit-value" value="${escapeHtml(t.value || '')}" placeholder="Value" oninput="updateTipValue(${i}, this.value)">
             <button type="button" class="remove" onclick="removeTip(${i})" title="Remove">&times;</button>
         `;
         box.appendChild(row);
     });
+}
+
+function updateTipLabel(i, value) {
+    if (!trafficTips[i]) return;
+    trafficTips[i].label = value;
+    clearHint('hint_traffic_tips');
+}
+function updateTipValue(i, value) {
+    if (!trafficTips[i]) return;
+    trafficTips[i].value = value;
+    clearHint('hint_traffic_tips');
 }
 
 function addLink() {
