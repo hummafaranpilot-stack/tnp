@@ -1,28 +1,23 @@
-# Logs
-logs
-*.log
-npm-debug.log*
+# PHP / server secrets
+config.php
 
-# Dependencies
+# Old Node artifacts (from previous React attempt)
 node_modules
-.pnp
-.pnp.js
-
-# Build output
 dist
-dist-ssr
-*.local
+package-lock.json
+
+# Logs
+*.log
 
 # Editor
 .vscode/*
 !.vscode/extensions.json
 .idea
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
+
+# OS
+Thumbs.db
 
 # Claude Code local settings
 .claude/

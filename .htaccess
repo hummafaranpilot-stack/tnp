@@ -1,0 +1,23 @@
+# Enable rewrite engine
+RewriteEngine On
+
+# Block direct access to config and includes
+RewriteRule ^config\.php$ - [F,L]
+RewriteRule ^config\.sample\.php$ - [F,L]
+RewriteRule ^includes/ - [F,L]
+
+# Clean URLs
+RewriteRule ^admin/?$ admin.php [L]
+RewriteRule ^login/?$ login.php [L]
+RewriteRule ^logout/?$ logout.php [L]
+RewriteRule ^setup/?$ setup.php [L]
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
