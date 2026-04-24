@@ -1,4 +1,8 @@
 <?php
+if (!file_exists(__DIR__ . '/../config.php')) {
+    render_missing_config();
+    exit;
+}
 require_once __DIR__ . '/../config.php';
 
 function get_pdo(): PDO {
@@ -10,6 +14,51 @@ function get_pdo(): PDO {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
             PDO::ATTR_EMULATE_PREPARES => false,
         ]);
+        ensure_schema($pdo);
     }
     return $pdo;
+}
+
+function ensure_schema(PDO $pdo): void {
+    static $done = false;
+    if ($done) return;
+    $pdo->exec("
+    CREATE TABLE IF NOT EXISTS offers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sr INT NOT NULL DEFAULT 0,
+        platform VARCHAR(100) DEFAULT '',
+        offer_name VARCHAR(255) DEFAULT '',
+        offer_id VARCHAR(100) DEFAULT '',
+        category VARCHAR(100) DEFAULT '',
+        top_landers TEXT,
+        affiliate_page_url VARCHAR(500) DEFAULT '',
+        revshare VARCHAR(50) DEFAULT '',
+        cpa VARCHAR(100) DEFAULT '',
+        allowed_geos VARCHAR(100) DEFAULT '',
+        restriction VARCHAR(10) DEFAULT 'No',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    $done = true;
+}
+
+function render_missing_config(): void {
+    http_response_code(503);
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>TNP — Setup needed</title>';
+    echo '<style>body{font-family:system-ui;max-width:640px;margin:3rem auto;padding:2rem;color:#1f2937;line-height:1.6}';
+    echo 'h1{color:#0f1a35}code{background:#f3f4f6;padding:2px 6px;border-radius:4px;font-size:.9em}';
+    echo 'pre{background:#0f1a35;color:#f9fafb;padding:1rem;border-radius:.5rem;overflow-x:auto;font-size:.85em}';
+    echo '.box{background:#fef3c7;border:1px solid #fcd34d;padding:1rem;border-radius:.5rem;margin:1rem 0}</style>';
+    echo '</head><body>';
+    echo '<h1>⚙ Setup required</h1>';
+    echo '<p>This site needs a <code>config.php</code> file with database credentials before it can run.</p>';
+    echo '<div class="box"><strong>What to do:</strong><ol>';
+    echo '<li>Open Hostinger <strong>File Manager</strong> → <code>public_html/</code></li>';
+    echo '<li>Create a new file named <code>config.php</code></li>';
+    echo '<li>Paste the contents from <code>config.sample.php</code> and fill in your MySQL credentials</li>';
+    echo '<li>Reload this page</li>';
+    echo '</ol></div>';
+    echo '<p>See <code>config.sample.php</code> in the repo for the exact format.</p>';
+    echo '</body></html>';
 }
