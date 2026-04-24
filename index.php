@@ -480,6 +480,14 @@ foreach ($offers as $o) {
             tip.style.left = (r.left + r.width / 2) + 'px';
             tip.style.top = r.top + 'px';
             tip.classList.add('visible');
+            // Clamp within viewport so long tooltips near the edges don't clip
+            const tipRect = tip.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const margin = 10;
+            let dx = 0;
+            if (tipRect.right > vw - margin) dx = tipRect.right - (vw - margin);
+            else if (tipRect.left < margin) dx = tipRect.left - margin;
+            if (dx !== 0) tip.style.left = (parseFloat(tip.style.left) - dx) + 'px';
         }
         function escapeHtml(s) {
             return String(s).replace(/[&<>"']/g, c =>
