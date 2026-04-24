@@ -1,8 +1,6 @@
 let landers = [];
 let links = [];
 let trafficTips = [];
-let otherPages = [];          // added "Other Pages" for the current offer
-let otherSuggestions = [];    // Shaver suggestions currently shown (session-only)
 let editingId = null;
 let currentShaverDomainId = null; // set when opening form from a Shaver suggestion
 let editingLanderIdx = null;      // index of lander being inline-edited, if any
@@ -114,21 +112,6 @@ function openForm(offer = null) {
         links = [{ title: 'Affiliate Page', url: offer.affiliate_page_url }];
     }
     renderLinks();
-
-    // Other Pages (admin-added secondary landers from Shaver suggestions)
-    otherPages = [];
-    if (offer?.other_pages) {
-        try {
-            const parsed = typeof offer.other_pages === 'string' ? JSON.parse(offer.other_pages) : offer.other_pages;
-            if (Array.isArray(parsed)) otherPages = parsed.filter(p => p && p.url);
-        } catch (_) {}
-    }
-    renderOtherPages();
-    otherSuggestions = [];
-    renderOtherSuggestions();
-    // Lazily load Shaver suggestions if this offer is linked
-    const sugShaverId = offer?.shaver_domain_id || currentShaverDomainId;
-    if (sugShaverId) fetchOtherSuggestions(Number(sugShaverId));
 
     // Traffic tips (list of {label, value})
     trafficTips = [];
@@ -264,8 +247,6 @@ function closeForm() {
     landers = [];
     links = [];
     trafficTips = [];
-    otherPages = [];
-    otherSuggestions = [];
     clearAllPrefilled();
 }
 
@@ -339,111 +320,6 @@ function adviceDescription(advice) {
     if (a === 'direct-link' || a === 'direct link')     return 'Direct link — the long copy already does the persuasion itself, no prelander needed.';
     if (a === 'vsl')                                    return 'VSL (Video Sales Letter) — best for viewers who prefer to watch videos over reading.';
     return '';
-}
-
-// ============== Other Pages (Shaver-sourced secondary landers) ==============
-function renderOtherPages() {
-    const box = document.getElementById('otherPagesList');
-    if (!box) return;
-    if (otherPages.length === 0) {
-        box.innerHTML = '';
-        return;
-    }
-    box.innerHTML = '';
-    otherPages.forEach((p, i) => {
-        const row = document.createElement('div');
-        row.className = 'lander-item';
-        row.innerHTML = `
-            <div class="lander-main">
-                <span class="label">${escapeHtml(p.label || 'Page')}</span>
-                <span class="url">${escapeHtml(p.url)}</span>
-            </div>
-            <button type="button" class="remove" onclick="removeOtherPage(${i})" title="Remove">&times;</button>
-        `;
-        box.appendChild(row);
-    });
-}
-
-function removeOtherPage(i) {
-    otherPages.splice(i, 1);
-    renderOtherPages();
-}
-
-function renderOtherSuggestions() {
-    const box = document.getElementById('otherSuggestionsList');
-    if (!box) return;
-    if (otherSuggestions.length === 0) {
-        box.innerHTML = '<p class="other-sugg-empty">No more suggestions — everything Shaver found is already added or dismissed.</p>';
-        return;
-    }
-    box.innerHTML = '';
-    otherSuggestions.forEach((s, i) => {
-        const row = document.createElement('div');
-        row.className = 'other-sugg-item';
-        const visits = s.visits ? `<span class="visits-tag">${s.visits} visits</span>` : '';
-        row.innerHTML = `
-            <input type="text" class="sugg-title" value="${escapeHtml(s.label || '')}" placeholder="Title" oninput="updateSuggestionTitle(${i}, this.value)">
-            <span class="sugg-url">${escapeHtml(s.url)}${visits}</span>
-            <button type="button" class="sugg-btn sugg-tick" title="Add to Other Pages" onclick="tickSuggestion(${i})">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-            <button type="button" class="sugg-btn sugg-cross" title="Dismiss" onclick="dismissOtherSuggestion(${i})">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-        `;
-        box.appendChild(row);
-    });
-}
-
-function updateSuggestionTitle(i, value) {
-    if (!otherSuggestions[i]) return;
-    otherSuggestions[i].label = value;
-}
-
-function tickSuggestion(i) {
-    const s = otherSuggestions[i];
-    if (!s || !s.url) return;
-    otherPages.push({ label: (s.label || 'Page').trim() || 'Page', url: s.url });
-    otherSuggestions.splice(i, 1);
-    renderOtherPages();
-    renderOtherSuggestions();
-}
-
-function dismissOtherSuggestion(i) {
-    otherSuggestions.splice(i, 1);
-    renderOtherSuggestions();
-}
-
-async function fetchOtherSuggestions(domainId) {
-    const hint = 'hint_other_pages';
-    setHint(hint, 'loading from Shaver…');
-    try {
-        const res = await fetch('/api.php?action=top_landers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ domain_id: domainId, limit: 20 }),
-        });
-        const result = await res.json();
-        clearHint(hint);
-        if (!result.ok || !Array.isArray(result.landers)) return;
-
-        // Build a set of URLs already in top_landers or other_pages
-        const seen = new Set();
-        landers.forEach(l => l?.url && seen.add(l.url));
-        otherPages.forEach(p => p?.url && seen.add(p.url));
-
-        otherSuggestions = result.landers
-            .filter(l => l && l.url && !seen.has(l.url))
-            .map(l => ({
-                label: l.label || 'Page',
-                url: l.url,
-                visits: l.visits || 0,
-            }));
-        renderOtherSuggestions();
-        if (otherSuggestions.length > 0) setHint(hint, otherSuggestions.length + ' from Shaver (editable)');
-    } catch (_) {
-        clearHint(hint);
-    }
 }
 
 function addTip() {
@@ -727,7 +603,6 @@ async function submitForm(e) {
         restriction: document.getElementById('f_restriction').value,
         links: links.map(({ title, url }) => ({ title, url })),
         traffic_tips: trafficTips.map(({ label, value }) => ({ label, value })),
-        other_pages: otherPages.map(({ label, url }) => ({ label, url })),
         top_landers: landers.map(l => {
             const out = { label: l.label, url: l.url };
             if (l.advice) out.advice = l.advice;

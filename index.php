@@ -460,7 +460,6 @@ foreach ($offers as $o) {
                         <span class="step-label">Step 3</span>
                         <h4>Select Landing Page</h4>
                         <select id="promote-landing"></select>
-                        <p class="step-help" id="promoteLoadingNote" style="display:none;">Loading more landers from Shaver…</p>
                     </div>
                 </div>
             </div>
@@ -548,8 +547,6 @@ foreach ($offers as $o) {
 
         const sel = document.getElementById('promote-landing');
         sel.innerHTML = '';
-        const note = document.getElementById('promoteLoadingNote');
-        note.style.display = 'none';
 
         // Determine default URL (domain root of the first top lander, or the base URL)
         let defaultUrl = baseUrl;
@@ -582,34 +579,6 @@ foreach ($offers as $o) {
 
         document.getElementById('promoteModal').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
-
-        // Lazily fetch more landers from Shaver for "All Landers" group
-        if (shaverId > 0) {
-            note.style.display = '';
-            fetch('/api.php?action=top_landers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ domain_id: shaverId, limit: 1000 }),
-            })
-            .then(r => r.json())
-            .then(result => {
-                note.style.display = 'none';
-                if (!result.ok || !Array.isArray(result.landers) || result.landers.length === 0) return;
-                const og = document.createElement('optgroup');
-                og.label = 'All Landers';
-                result.landers.forEach(l => {
-                    if (!l || !l.url || seenUrls.has(l.url)) return;
-                    seenUrls.add(l.url);
-                    const opt = document.createElement('option');
-                    opt.value = l.url;
-                    const visits = l.visits ? ` · ${l.visits} visits` : '';
-                    opt.textContent = (l.label || l.url) + visits;
-                    og.appendChild(opt);
-                });
-                if (og.children.length > 0) sel.appendChild(og);
-            })
-            .catch(() => { note.style.display = 'none'; });
-        }
     }
 
     function closePromoteModal() {
