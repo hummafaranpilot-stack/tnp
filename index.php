@@ -422,7 +422,10 @@ foreach ($offers as $o) {
                     <div class="country-grid">
                         <?php foreach ($countries as $c): ?>
                             <div class="country-item">
-                                <span class="country-flag"><?= $c['flag'] ?></span>
+                                <img class="country-flag"
+                                     src="https://flagcdn.com/w40/<?= h($c['code']) ?>.png"
+                                     srcset="https://flagcdn.com/w80/<?= h($c['code']) ?>.png 2x"
+                                     width="24" height="18" alt="<?= h($c['name']) ?>" loading="lazy">
                                 <span class="country-name"><?= h($c['name']) ?></span>
                             </div>
                         <?php endforeach; ?>

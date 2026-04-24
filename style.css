@@ -1983,7 +1983,15 @@ main.page { padding: 2rem 0 4rem; }
     border-color: var(--indigo-500);
     background: var(--indigo-50);
 }
-.country-flag { font-size: 20px; line-height: 1; }
+.country-flag {
+    width: 24px;
+    height: 18px;
+    object-fit: cover;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.1);
+    flex-shrink: 0;
+    display: block;
+}
 .country-name { font-weight: 600; }
 
 @media (max-width: 640px) {
