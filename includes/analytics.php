@@ -73,15 +73,18 @@ function normalize_platform(string $p): string {
  */
 function shaver_domain_to_offer(array $d): array {
     $url = trim($d['domain_url'] ?? '');
+    // Shaver's `label` is the BuyGoods offer ID / ClickBank nickname — not
+    // the product's display name. Put it in offer_id and leave offer_name
+    // blank for the admin to fill in.
     return [
         'id'                 => null,
         'shaver_domain_id'   => (int)($d['id'] ?? 0),
         'sr'                 => 0, // server will auto-assign
-        'offer_name'         => $d['label'] ?? '',
+        'offer_name'         => '',
+        'offer_id'           => $d['label'] ?? '',
         'platform'           => normalize_platform($d['platform'] ?? ''),
         'affiliate_page_url' => $url, // legacy field, still populated for safety
         'links'              => $url !== '' ? [['title' => 'Affiliate Page', 'url' => $url]] : [],
-        'offer_id'           => '',
         'category'           => '',
         'revshare'           => '',
         'cpa'                => '',

@@ -133,8 +133,8 @@ function openForm(offer = null) {
 
     // Mark Shaver-sourced fields as prefilled (yellow)
     if (isFromShaver) {
-        if (offer.offer_name) markPrefilled('f_offer_name');
-        if (offer.platform)   markPrefilled('f_platform');
+        if (offer.offer_id) markPrefilled('f_offer_id');
+        if (offer.platform) markPrefilled('f_platform');
     }
 
     // Apply platform defaults from past offers (learning)

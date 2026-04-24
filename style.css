@@ -865,7 +865,7 @@ main.page { padding: 2rem 0 4rem; }
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding: 1rem 0.75rem;
+    padding: 3.25rem 0.75rem 1rem;
     position: sticky;
     top: 0;
     height: 100vh;
@@ -1040,6 +1040,11 @@ main.page { padding: 2rem 0 4rem; }
     border-right: none;
 }
 .admin-shell.sidebar-collapsed .sidebar > * { opacity: 0; pointer-events: none; }
+/* When sidebar is closed, push main content heading clear of the toggle button */
+.admin-shell.sidebar-collapsed .admin-main { padding-left: 4rem; }
+@media (max-width: 900px) {
+    .admin-shell.sidebar-collapsed .admin-main { padding-left: 3.5rem; }
+}
 
 /* Sidebar toggle button (fixed, always visible) */
 .sidebar-toggle-btn {
