@@ -370,9 +370,17 @@ foreach ($offers as $o) {
                                         }
                                     ?>
                                     <?php
-                                        $is_buygoods = strcasecmp($o['platform'] ?? '', 'BuyGoods') === 0;
+                                        $platform = $o['platform'] ?? '';
+                                        $is_buygoods = strcasecmp($platform, 'BuyGoods') === 0;
+                                        $is_clickbank = strcasecmp($platform, 'ClickBank') === 0;
+                                        $cb_url = trim($o['clickbank_redirect_url'] ?? '');
                                     ?>
-                                    <?php if ($is_buygoods && (!empty($landers) || $promote_url)): ?>
+                                    <?php if ($is_clickbank && $cb_url !== ''): ?>
+                                        <a class="btn-promote" href="<?= h($cb_url) ?>" target="_blank" rel="noopener noreferrer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7h9l-11 13 2-9H2z"/></svg>
+                                            Promote Now
+                                        </a>
+                                    <?php elseif ($is_buygoods && (!empty($landers) || $promote_url)): ?>
                                         <button type="button" class="btn-promote"
                                                 data-offer-name="<?= h($o['offer_name']) ?>"
                                                 data-shaver-id="<?= (int)($o['shaver_domain_id'] ?? 0) ?>"

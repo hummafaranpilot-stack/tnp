@@ -80,6 +80,8 @@ function openForm(offer = null) {
     document.getElementById('f_cpa').value = offer?.cpa || '';
     document.getElementById('f_allowed_geos').value = offer?.allowed_geos || 'Tier-1 Default';
     document.getElementById('f_restriction').value = offer?.restriction || 'No';
+    document.getElementById('f_cb_url').value = offer?.clickbank_redirect_url || '';
+    toggleCbUrlField();
 
     // Image reset
     const imgUrl = offer?.image_url || '';
@@ -188,16 +190,26 @@ function applyPlatformDefaults(platform, isNew) {
     });
 }
 
-// React to platform dropdown changes — re-apply learned defaults
+// React to platform dropdown changes — re-apply learned defaults + toggle CB field
 document.addEventListener('DOMContentLoaded', () => {
     const platformSel = document.getElementById('f_platform');
     if (platformSel) {
         platformSel.addEventListener('change', () => {
-            // Only re-apply if we're adding (not editing)
             if (!editingId) applyPlatformDefaults(platformSel.value, true);
+            toggleCbUrlField();
         });
     }
 });
+
+function toggleCbUrlField() {
+    const platform = document.getElementById('f_platform').value;
+    const wrap = document.getElementById('cb_url_field');
+    const input = document.getElementById('f_cb_url');
+    if (!wrap || !input) return;
+    const isCB = platform === 'ClickBank';
+    wrap.style.display = isCB ? '' : 'none';
+    input.required = isCB;
+}
 
 async function fetchTopLandersAsync(domain_id) {
     setHint('hint_landers', 'loading from Shaver…');
@@ -604,6 +616,7 @@ async function submitForm(e) {
         cpa: document.getElementById('f_cpa').value,
         allowed_geos: document.getElementById('f_allowed_geos').value,
         restriction: document.getElementById('f_restriction').value,
+        clickbank_redirect_url: document.getElementById('f_cb_url').value.trim(),
         links: links.map(({ title, url }) => ({ title, url })),
         traffic_tips: trafficTips.map(({ label, value }) => ({ label, value })),
         top_landers: landers.map(l => {

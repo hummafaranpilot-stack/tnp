@@ -73,6 +73,13 @@ function ensure_schema(PDO $pdo): void {
         $pdo->exec("ALTER TABLE offers ADD COLUMN other_pages TEXT NULL AFTER top_landers");
     }
 
+    // ClickBank offers need a dedicated redirect URL for the Promote Now button
+    // (the ClickBank marketplace / product page where affiliates grab their hoplink)
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'clickbank_redirect_url'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN clickbank_redirect_url VARCHAR(500) NULL");
+    }
+
     // Dismissed Shaver domain suggestions
     $pdo->exec("
     CREATE TABLE IF NOT EXISTS dismissed_shaver_domains (

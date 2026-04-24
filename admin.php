@@ -431,6 +431,11 @@ foreach ($counts as $p => $fields) {
                         <label>Offer ID / Nickname <span class="field-hint" id="hint_offer_id"></span></label>
                         <input type="text" name="offer_id" id="f_offer_id">
                     </div>
+                    <div class="full cb-only" id="cb_url_field" style="display:none;">
+                        <label>ClickBank Redirect URL <span class="required">*</span></label>
+                        <input type="url" name="clickbank_redirect_url" id="f_cb_url" placeholder="https://www.clickbank.com/mkplSearchResult?...">
+                        <p class="field-help">Required for ClickBank offers. The "Promote Now" button will redirect affiliates here.</p>
+                    </div>
                     <div>
                         <label>Category <span class="field-hint" id="hint_category"></span></label>
                         <select name="category" id="f_category">

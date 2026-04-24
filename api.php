@@ -27,9 +27,11 @@ try {
 
         $stmt = $pdo->prepare("INSERT INTO offers
             (sr, platform, offer_name, image_url, offer_id, category, top_landers, other_pages,
-             affiliate_page_url, links, revshare, cpa, allowed_geos, restriction, traffic_tips, shaver_domain_id)
+             affiliate_page_url, links, clickbank_redirect_url, revshare, cpa, allowed_geos, restriction,
+             traffic_tips, shaver_domain_id)
             VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers, :other_pages,
-                    :affiliate_page_url, :links, :revshare, :cpa, :allowed_geos, :restriction, :traffic_tips, :shaver_domain_id)");
+                    :affiliate_page_url, :links, :clickbank_redirect_url, :revshare, :cpa, :allowed_geos, :restriction,
+                    :traffic_tips, :shaver_domain_id)");
         $params = bind($data);
         $params[':sr'] = $sr;
         $params[':shaver_domain_id'] = !empty($data['shaver_domain_id']) ? (int)$data['shaver_domain_id'] : null;
@@ -45,7 +47,9 @@ try {
         $stmt = $pdo->prepare("UPDATE offers SET
             sr = :sr, platform = :platform, offer_name = :offer_name, image_url = :image_url,
             offer_id = :offer_id, category = :category, top_landers = :top_landers, other_pages = :other_pages,
-            affiliate_page_url = :affiliate_page_url, links = :links, revshare = :revshare, cpa = :cpa,
+            affiliate_page_url = :affiliate_page_url, links = :links,
+            clickbank_redirect_url = :clickbank_redirect_url,
+            revshare = :revshare, cpa = :cpa,
             allowed_geos = :allowed_geos, restriction = :restriction, traffic_tips = :traffic_tips
             WHERE id = :id");
         $params = bind($data);
@@ -144,6 +148,12 @@ function bind(array $d): array {
     if (!is_array($other_pages)) $other_pages = [];
     $links = $d['links'] ?? [];
     if (!is_array($links)) $links = [];
+    $platform = (string)($d['platform'] ?? '');
+    $cb_url = trim((string)($d['clickbank_redirect_url'] ?? ''));
+    // Server-side guard: ClickBank offers must carry a redirect URL
+    if (strcasecmp($platform, 'ClickBank') === 0 && $cb_url === '') {
+        throw new RuntimeException('ClickBank offers require a redirect URL (admin → Basics → ClickBank Redirect URL).');
+    }
     $tips_raw = $d['traffic_tips'] ?? [];
     if (!is_array($tips_raw)) $tips_raw = [];
     $tips = [];
@@ -175,6 +185,7 @@ function bind(array $d): array {
         ':other_pages' => json_encode($other_pages),
         ':affiliate_page_url' => $aff_url,
         ':links' => json_encode($links),
+        ':clickbank_redirect_url' => $cb_url,
         ':revshare' => (string)($d['revshare'] ?? ''),
         ':cpa' => (string)($d['cpa'] ?? ''),
         ':allowed_geos' => (string)($d['allowed_geos'] ?? ''),
