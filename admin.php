@@ -311,8 +311,9 @@ foreach ($tip_counts as $p => $labels) {
                                             $hasMan  = !empty($l['advice']);
                                             if ($hasMan) {
                                                 $label  = $l['label'] ?? $info['label'];
-                                                $type   = $l['type'] ?? 'custom';
                                                 $advice = $l['advice'];
+                                                $derived_type = advice_type_for($advice);
+                                                $type = $derived_type !== 'custom' ? $derived_type : ($l['type'] ?? 'custom');
                                                 $desc   = advice_description($advice);
                                                 $tip    = $desc ? $advice . ' — ' . $desc : '';
                                             } else {

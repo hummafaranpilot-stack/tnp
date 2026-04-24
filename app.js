@@ -620,8 +620,15 @@ function renderLanders() {
         const label = hasManual ? (l.label || derived.label || 'Lander')
                                 : (derived.label || l.label || 'Lander');
         const advice = hasManual ? l.advice : (derived.advice || '');
-        const type = hasManual ? (l.type || 'custom')
-                               : (derived.type !== 'other' ? derived.type : 'other');
+        // Always re-derive chip color from the advice text so legacy landers
+        // saved with type='custom' but advice='VSL' still render violet.
+        let type;
+        if (hasManual) {
+            const byAdv = adviceTypeFor(l.advice);
+            type = byAdv !== 'custom' ? byAdv : (l.type || 'custom');
+        } else {
+            type = derived.type !== 'other' ? derived.type : 'other';
+        }
         const description = hasManual
             ? adviceDescription(advice)
             : (derived.description || '');

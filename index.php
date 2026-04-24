@@ -257,8 +257,11 @@ foreach ($offers as $o) {
                                             $hasMan  = !empty($l['advice']);
                                             if ($hasMan) {
                                                 $label  = $l['label'] ?? $info['label'];
-                                                $type   = $l['type'] ?? 'custom';
                                                 $advice = $l['advice'];
+                                                // Re-derive type from advice text so legacy 'custom' rows
+                                                // with advice="VSL" (etc.) still get the correct chip color.
+                                                $derived_type = advice_type_for($advice);
+                                                $type = $derived_type !== 'custom' ? $derived_type : ($l['type'] ?? 'custom');
                                                 $desc   = advice_description($advice);
                                                 $tip    = $desc ? $advice . ' — ' . $desc : '';
                                             } else {

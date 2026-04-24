@@ -67,3 +67,17 @@ function advice_description(string $advice): string {
         default                         => '',
     };
 }
+
+/**
+ * Resolve the chip-color type slug from a free-form advice string.
+ * Older landers may have been saved with type='custom' even when the
+ * advice text was "VSL" — re-derive here so the color is consistent.
+ */
+function advice_type_for(string $advice): string {
+    return match (strtolower(trim($advice))) {
+        'prelander', 'pre-lander'    => 'short',
+        'direct-link', 'direct link' => 'long',
+        'vsl'                        => 'vsl',
+        default                      => 'custom',
+    };
+}
