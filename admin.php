@@ -4,9 +4,11 @@ require_login();
 require __DIR__ . '/includes/db.php';
 
 $offers = [];
+$next_sr_val = 1;
 try {
     $pdo = get_pdo();
     $offers = $pdo->query('SELECT * FROM offers ORDER BY sr ASC')->fetchAll();
+    $next_sr_val = next_sr($pdo);
 } catch (Throwable $e) {
     // Show empty; errors handled inline
 }
@@ -17,6 +19,7 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TNP Admin Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -36,7 +39,7 @@ try {
         </div>
     </header>
 
-    <main class="container">
+    <main class="container" data-next-sr="<?= h((string)$next_sr_val) ?>">
         <div class="admin-bar">
             <h2>Offers <span class="count">(<?= count($offers) ?>)</span></h2>
             <button class="btn btn-primary" onclick="openForm()">+ Add Offer</button>
@@ -50,6 +53,7 @@ try {
                     <thead>
                         <tr>
                             <th>Sr</th>
+                            <th>Image</th>
                             <th>Platform</th>
                             <th>Offer Name</th>
                             <th>Category</th>
@@ -63,6 +67,13 @@ try {
                     <?php foreach ($offers as $o): ?>
                         <tr data-id="<?= h((string)$o['id']) ?>" data-offer='<?= h(json_encode($o, JSON_HEX_APOS | JSON_HEX_QUOT)) ?>'>
                             <td class="sr"><?= h((string)$o['sr']) ?></td>
+                            <td>
+                                <?php if (!empty($o['image_url'])): ?>
+                                    <img class="thumb" src="<?= h($o['image_url']) ?>" alt="">
+                                <?php else: ?>
+                                    <span class="thumb thumb-empty">—</span>
+                                <?php endif; ?>
+                            </td>
                             <td><span class="badge"><?= h($o['platform']) ?></span></td>
                             <td class="name"><?= h($o['offer_name']) ?></td>
                             <td><span class="pill"><?= h($o['category']) ?></span></td>
@@ -98,6 +109,26 @@ try {
                         </select>
                     </div>
                     <div class="full"><label>Offer Name</label><input type="text" name="offer_name" id="f_offer_name" required></div>
+
+                    <div class="full">
+                        <label>Product Image</label>
+                        <div class="image-tabs">
+                            <button type="button" class="tab active" data-tab="url" onclick="switchImageTab('url')">Paste URL</button>
+                            <button type="button" class="tab" data-tab="upload" onclick="switchImageTab('upload')">Upload File</button>
+                        </div>
+                        <div id="imageUrlPane" class="tab-pane">
+                            <input type="url" id="f_image_url" placeholder="https://example.com/image.jpg" oninput="previewImage(this.value)">
+                        </div>
+                        <div id="imageUploadPane" class="tab-pane hidden">
+                            <input type="file" id="f_image_file" accept="image/png,image/jpeg,image/webp,image/gif" onchange="uploadImage(this)">
+                            <p class="hint" id="uploadStatus"></p>
+                        </div>
+                        <div id="imagePreview" class="image-preview hidden">
+                            <img id="previewImg" src="" alt="">
+                            <button type="button" class="remove-img" onclick="clearImage()" title="Remove image">&times;</button>
+                        </div>
+                    </div>
+
                     <div><label>Offer ID / Nickname</label><input type="text" name="offer_id" id="f_offer_id"></div>
                     <div><label>Category</label>
                         <select name="category" id="f_category">

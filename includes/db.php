@@ -28,6 +28,7 @@ function ensure_schema(PDO $pdo): void {
         sr INT NOT NULL DEFAULT 0,
         platform VARCHAR(100) DEFAULT '',
         offer_name VARCHAR(255) DEFAULT '',
+        image_url VARCHAR(500) DEFAULT '',
         offer_id VARCHAR(100) DEFAULT '',
         category VARCHAR(100) DEFAULT '',
         top_landers TEXT,
@@ -40,7 +41,17 @@ function ensure_schema(PDO $pdo): void {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    // Add image_url column if upgrading from older schema
+    $cols = $pdo->query("SHOW COLUMNS FROM offers LIKE 'image_url'")->fetchAll();
+    if (empty($cols)) {
+        $pdo->exec("ALTER TABLE offers ADD COLUMN image_url VARCHAR(500) DEFAULT '' AFTER offer_name");
+    }
     $done = true;
+}
+
+function next_sr(PDO $pdo): int {
+    $row = $pdo->query('SELECT COALESCE(MAX(sr), 0) + 1 AS next_sr FROM offers')->fetch();
+    return (int)($row['next_sr'] ?? 1);
 }
 
 function render_missing_config(): void {

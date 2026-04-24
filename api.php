@@ -2,23 +2,31 @@
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/db.php';
 
-header('Content-Type: application/json');
-require_login_api();
-
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
+
+// Upload endpoint returns JSON but is multipart, not application/json
+if ($action !== 'upload') {
+    header('Content-Type: application/json');
+}
+require_login_api();
 
 try {
     $pdo = get_pdo();
 
     if ($method === 'POST' && $action === 'create') {
         $data = read_json();
+        $sr = (int)($data['sr'] ?? 0);
+        if ($sr <= 0) $sr = next_sr($pdo);
+
         $stmt = $pdo->prepare("INSERT INTO offers
-            (sr, platform, offer_name, offer_id, category, top_landers,
+            (sr, platform, offer_name, image_url, offer_id, category, top_landers,
              affiliate_page_url, revshare, cpa, allowed_geos, restriction)
-            VALUES (:sr, :platform, :offer_name, :offer_id, :category, :top_landers,
+            VALUES (:sr, :platform, :offer_name, :image_url, :offer_id, :category, :top_landers,
                     :affiliate_page_url, :revshare, :cpa, :allowed_geos, :restriction)");
-        $stmt->execute(bind($data));
+        $params = bind($data);
+        $params[':sr'] = $sr;
+        $stmt->execute($params);
         echo json_encode(['ok' => true, 'id' => $pdo->lastInsertId()]);
         exit;
     }
@@ -28,9 +36,10 @@ try {
         $id = (int)($data['id'] ?? 0);
         if ($id <= 0) throw new RuntimeException('Missing id');
         $stmt = $pdo->prepare("UPDATE offers SET
-            sr = :sr, platform = :platform, offer_name = :offer_name, offer_id = :offer_id,
-            category = :category, top_landers = :top_landers, affiliate_page_url = :affiliate_page_url,
-            revshare = :revshare, cpa = :cpa, allowed_geos = :allowed_geos, restriction = :restriction
+            sr = :sr, platform = :platform, offer_name = :offer_name, image_url = :image_url,
+            offer_id = :offer_id, category = :category, top_landers = :top_landers,
+            affiliate_page_url = :affiliate_page_url, revshare = :revshare, cpa = :cpa,
+            allowed_geos = :allowed_geos, restriction = :restriction
             WHERE id = :id");
         $params = bind($data);
         $params[':id'] = $id;
@@ -46,6 +55,45 @@ try {
         $stmt = $pdo->prepare('DELETE FROM offers WHERE id = :id');
         $stmt->execute([':id' => $id]);
         echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'upload') {
+        header('Content-Type: application/json');
+        if (empty($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+            throw new RuntimeException('No file uploaded or upload error');
+        }
+        $file = $_FILES['image'];
+        if ($file['size'] > 5 * 1024 * 1024) {
+            throw new RuntimeException('File too large (max 5 MB)');
+        }
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($file['tmp_name']);
+        $allowed = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+            'image/gif'  => 'gif',
+        ];
+        if (!isset($allowed[$mime])) {
+            throw new RuntimeException('Invalid image type (only jpg, png, webp, gif)');
+        }
+        $ext = $allowed[$mime];
+        $uploads_dir = __DIR__ . '/uploads';
+        if (!is_dir($uploads_dir)) {
+            @mkdir($uploads_dir, 0755, true);
+        }
+        $name = bin2hex(random_bytes(12)) . '.' . $ext;
+        $dest = $uploads_dir . '/' . $name;
+        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+            throw new RuntimeException('Failed to save uploaded file');
+        }
+        echo json_encode(['ok' => true, 'url' => '/uploads/' . $name]);
+        exit;
+    }
+
+    if ($method === 'GET' && $action === 'next_sr') {
+        echo json_encode(['sr' => next_sr($pdo)]);
         exit;
     }
 
@@ -69,6 +117,7 @@ function bind(array $d): array {
         ':sr' => (int)($d['sr'] ?? 0),
         ':platform' => (string)($d['platform'] ?? ''),
         ':offer_name' => (string)($d['offer_name'] ?? ''),
+        ':image_url' => (string)($d['image_url'] ?? ''),
         ':offer_id' => (string)($d['offer_id'] ?? ''),
         ':category' => (string)($d['category'] ?? ''),
         ':top_landers' => json_encode($landers),

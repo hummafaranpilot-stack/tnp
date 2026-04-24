@@ -1,0 +1,15 @@
+# Disable PHP execution in uploads folder (critical security)
+<FilesMatch "\.(php|php3|php4|php5|php7|phtml|phar)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+php_flag engine off
+
+# Allow only image types to be served
+<FilesMatch "\.(jpe?g|png|gif|webp|svg)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+Options -Indexes

@@ -1,6 +1,11 @@
 # PHP / server secrets
 config.php
 
+# User-uploaded images (keep folder, ignore content)
+uploads/*
+!uploads/.htaccess
+!uploads/.gitkeep
+
 # Old Node artifacts (from previous React attempt)
 node_modules
 dist
