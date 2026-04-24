@@ -268,10 +268,22 @@ async function uploadImage(input) {
 function addLander() {
     const label = document.getElementById('lander_label').value.trim();
     const url = document.getElementById('lander_url').value.trim();
+    const adviceEl = document.getElementById('lander_advice');
+    const advice = adviceEl ? adviceEl.value.trim() : '';
     if (!label || !url) return;
-    landers.push({ label, url });
+    const lander = { label, url };
+    if (advice) {
+        lander.advice = advice;
+        // Map common values to known color types; anything else renders as 'custom'
+        const a = advice.toLowerCase();
+        if (a === 'prelander' || a === 'pre-lander') lander.type = 'short';
+        else if (a === 'direct-link' || a === 'direct link') lander.type = 'long';
+        else lander.type = 'custom';
+    }
+    landers.push(lander);
     document.getElementById('lander_label').value = '';
     document.getElementById('lander_url').value = '';
+    if (adviceEl) adviceEl.value = '';
     renderLanders();
 }
 
@@ -324,10 +336,14 @@ function renderLanders() {
         const row = document.createElement('div');
         row.className = 'lander-item' + (l.prefilled ? ' prefilled' : '');
         const derived = deriveLanderType(l.url);
-        const label = derived.label || l.label || 'Lander';
-        const type = derived.type !== 'other' ? derived.type : (l.type || 'other');
-        const advice = derived.advice || l.advice || '';
-        const description = derived.description || '';
+        // Manual entries (with their own advice/type) win over URL-derived.
+        const hasManual = Boolean(l.advice);
+        const label = hasManual ? (l.label || derived.label || 'Lander')
+                                : (derived.label || l.label || 'Lander');
+        const advice = hasManual ? l.advice : (derived.advice || '');
+        const type = hasManual ? (l.type || 'custom')
+                               : (derived.type !== 'other' ? derived.type : 'other');
+        const description = hasManual ? '' : (derived.description || '');
         const visitsBadge = l.visits ? `<span class="visits-tag">${l.visits} visits</span>` : '';
         const adviceChip = advice
             ? `<span class="advice-chip advice-${type}"${description ? ` data-tip="${escapeHtml(description)}"` : ''}>${escapeHtml(advice)}</span>`

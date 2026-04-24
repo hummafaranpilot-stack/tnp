@@ -359,6 +359,7 @@ foreach ($counts as $p => $fields) {
                     <div class="lander-row">
                         <input type="text" id="lander_label" placeholder="Label (e.g. Lander 1)">
                         <input type="url" id="lander_url" placeholder="https://...">
+                        <input type="text" id="lander_advice" placeholder="Capsule (optional)" maxlength="24">
                         <button type="button" class="btn btn-primary" onclick="addLander()">+ Add</button>
                     </div>
                     <div id="landersList" class="landers-list"></div>
