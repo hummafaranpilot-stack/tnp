@@ -424,6 +424,44 @@ main.page { padding: 2rem 0 4rem; }
     white-space: nowrap;
 }
 
+/* Merged Commission cell (Revshare OR Fixed CPA) */
+.offer-table td.commission-cell {
+    vertical-align: middle;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+.commission-rev {
+    color: var(--success);
+    font-weight: 500;
+    font-size: 15px;
+}
+.commission-rev strong {
+    color: #047857;
+    font-weight: 800;
+    font-size: 17px;
+    margin-right: 0.25rem;
+}
+.commission-cpa {
+    color: var(--text);
+    font-weight: 500;
+    font-size: 15px;
+}
+.commission-cpa strong {
+    font-weight: 800;
+    font-size: 17px;
+    margin-right: 0.25rem;
+    color: var(--text);
+}
+.commission-or {
+    font-size: 11px;
+    color: var(--text-subtle);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin: 0.3rem 0;
+    text-align: left;
+    padding-left: 0.1rem;
+}
+
 /* Merged Product cell (image on top, platform badge below) — left-aligned to match header */
 .offer-table td.product-cell {
     text-align: left;

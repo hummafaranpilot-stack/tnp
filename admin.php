@@ -238,8 +238,7 @@ foreach ($counts as $p => $fields) {
                                 <th>Offer</th>
                                 <th>Top Landers</th>
                                 <th>Links</th>
-                                <th>RevShare</th>
-                                <th>CPA</th>
+                                <th>Commission</th>
                                 <th>GEOs</th>
                                 <th>Restriction</th>
                                 <th class="center">Actions</th>
@@ -331,8 +330,25 @@ foreach ($counts as $p => $fields) {
                                         </div>
                                     <?php endif; ?>
                                 </td>
-                                <td class="rev"><?= h($o['revshare']) ?></td>
-                                <td><?= h($o['cpa']) ?></td>
+                                <td class="commission-cell">
+                                    <?php
+                                        $hasRev = !empty($o['revshare']);
+                                        $hasCpa = !empty($o['cpa']);
+                                    ?>
+                                    <?php if (!$hasRev && !$hasCpa): ?>
+                                        <span class="muted">—</span>
+                                    <?php else: ?>
+                                        <?php if ($hasRev): ?>
+                                            <div class="commission-rev"><strong><?= h($o['revshare']) ?></strong> Revshare</div>
+                                        <?php endif; ?>
+                                        <?php if ($hasRev && $hasCpa): ?>
+                                            <div class="commission-or">OR</div>
+                                        <?php endif; ?>
+                                        <?php if ($hasCpa): ?>
+                                            <div class="commission-cpa"><strong><?= h($o['cpa']) ?></strong> Fixed CPA</div>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="muted">
                                     <?php if ($o['allowed_geos'] === 'Tier-1 (39 Countries)'): ?>
                                         <button type="button" class="geo-link" onclick="showCountries()">
