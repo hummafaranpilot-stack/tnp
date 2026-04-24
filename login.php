@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body class="login-body">
     <div class="login-card">
-        <div class="login-logo">TNP</div>
+        <img class="login-logo" src="/assets/tnp-logo.jpg" alt="TNP">
         <h1>Welcome back</h1>
         <p class="subtitle">Sign in to manage your affiliate offers</p>
         <form method="POST" action="/login">

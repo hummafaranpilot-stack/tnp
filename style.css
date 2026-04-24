@@ -105,16 +105,12 @@ button { font-family: inherit; }
 .brand-logo {
     width: 36px;
     height: 36px;
-    background: var(--navy-800);
-    color: #fff;
+    object-fit: contain;
     border-radius: var(--r-md);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    font-size: 13px;
-    box-shadow: var(--shadow-xs);
+    background: #ffffff;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+    display: block;
 }
 .brand-name {
     font-weight: 700;
@@ -845,16 +841,13 @@ main.page { padding: 2rem 0 4rem; }
     border: 1px solid var(--border);
 }
 .login-logo {
-    width: 48px;
-    height: 48px;
-    background: var(--navy-800);
-    color: #fff;
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
     border-radius: var(--r-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 15px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    display: block;
     margin: 0 auto 1.25rem;
     box-shadow: var(--shadow-sm);
 }

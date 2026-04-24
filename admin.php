@@ -46,7 +46,7 @@ foreach ($offers as $o) {
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <span class="brand-logo">TNP</span>
+            <img class="brand-logo" src="/assets/tnp-logo.jpg" alt="TNP">
             <span>
                 <span class="brand-name">TNP Admin</span>
                 <br><span class="brand-tag">Dashboard</span>
