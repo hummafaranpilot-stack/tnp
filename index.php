@@ -214,6 +214,7 @@ foreach ($offers as $o) {
                                 <th>Commission</th>
                                 <th>GEOs</th>
                                 <th>Traffic Tips</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="offersBody">
@@ -354,6 +355,31 @@ foreach ($offers as $o) {
                                             <li><?php if ($lbl): ?><strong><?= h($lbl) ?>:</strong> <?php endif; ?><?= h($val) ?></li>
                                         <?php endforeach; ?>
                                         </ul>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                        $promote_url = '';
+                                        foreach ($offer_links as $ln) {
+                                            if (($ln['title'] ?? '') === 'Affiliate Page' && !empty($ln['url'])) {
+                                                $promote_url = $ln['url'];
+                                                break;
+                                            }
+                                        }
+                                        if (!$promote_url && !empty($offer_links[0]['url'])) {
+                                            $promote_url = $offer_links[0]['url'];
+                                        }
+                                        if (!$promote_url && !empty($o['affiliate_page_url'])) {
+                                            $promote_url = $o['affiliate_page_url'];
+                                        }
+                                    ?>
+                                    <?php if ($promote_url): ?>
+                                        <a class="btn-promote" href="<?= h($promote_url) ?>" target="_blank" rel="noopener noreferrer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-2 7h9l-11 13 2-9H2z"/></svg>
+                                            Promote Now
+                                        </a>
+                                    <?php else: ?>
+                                        <span class="muted">—</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>
