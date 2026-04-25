@@ -6,13 +6,14 @@ require __DIR__ . '/includes/analytics.php';
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
 
-// Upload endpoint returns JSON but is multipart, not application/json
-if ($action !== 'upload') {
+// Most endpoints return JSON; a few stream other content (multipart
+// upload, CSV export) and set their own Content-Type later.
+if (!in_array($action, ['upload', 'export_offers'], true)) {
     header('Content-Type: application/json');
 }
 // top_landers is safe to expose to unauthenticated viewers — it only
 // returns aggregate landing-URL data used by the Promote Now modal.
-$PUBLIC_ACTIONS = ['top_landers', 'track'];
+$PUBLIC_ACTIONS = ['top_landers', 'track', 'export_offers'];
 if (!in_array($action, $PUBLIC_ACTIONS, true)) {
     require_login_api();
 }
@@ -101,6 +102,105 @@ try {
             throw new RuntimeException('Failed to save uploaded file');
         }
         echo json_encode(['ok' => true, 'url' => '/uploads/' . $name]);
+        exit;
+    }
+
+    if ($method === 'GET' && $action === 'export_offers') {
+        // Stream a CSV (UTF-8 with BOM so Excel renders unicode correctly)
+        // containing every offer + all linked metadata, semicolon-joined for
+        // arrays so a single cell carries the full list.
+        $rows = $pdo->query('SELECT * FROM offers ORDER BY sr ASC')->fetchAll();
+
+        $filename = 'tnp-offers-' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+
+        $out = fopen('php://output', 'w');
+        // UTF-8 BOM tells Excel to read the file as UTF-8 instead of cp1252.
+        fwrite($out, "\xEF\xBB\xBF");
+
+        $headers = [
+            'Sr', 'Platform', 'Offer Name', 'Offer ID / Nickname', 'Category',
+            'Coming Soon', 'Image URL',
+            'RevShare', 'CPA', 'CPA Manually Activated',
+            'Allowed GEOs', 'Restriction',
+            'Affiliate Page', 'Creatives', 'Traffic Tips Link', 'Ad Copy Swipes',
+            'ClickBank Redirect URL',
+            'Top Landers', 'Other Pages', 'Traffic Tips',
+            'Created At', 'Updated At',
+        ];
+        fputcsv($out, $headers);
+
+        foreach ($rows as $o) {
+            // Pull named links out of the JSON array so each well-known
+            // title gets its own column. Anything else stays in the
+            // "Other Pages" cell so nothing is lost.
+            $links = json_decode($o['links'] ?? '[]', true) ?: [];
+            $named = ['Affiliate Page' => '', 'Creatives' => '', 'Traffic Tips' => '', 'Ad Copy Swipes' => ''];
+            foreach ($links as $ln) {
+                $title = (string)($ln['title'] ?? '');
+                $url   = (string)($ln['url'] ?? '');
+                if (isset($named[$title]) && $url !== '') $named[$title] = $url;
+            }
+
+            $landers = json_decode($o['top_landers'] ?? '[]', true) ?: [];
+            $landers_str = implode(' | ', array_filter(array_map(function ($l) {
+                $label  = trim((string)($l['label'] ?? ''));
+                $url    = trim((string)($l['url'] ?? ''));
+                $advice = trim((string)($l['advice'] ?? ''));
+                if ($url === '') return '';
+                $prefix = $label !== '' ? $label : 'Lander';
+                if ($advice !== '') $prefix .= " ({$advice})";
+                return $prefix . ' → ' . $url;
+            }, $landers)));
+
+            $others = json_decode($o['other_pages'] ?? '[]', true) ?: [];
+            $others_str = implode(' | ', array_filter(array_map(function ($p) {
+                $label = trim((string)($p['label'] ?? ''));
+                $url   = trim((string)($p['url'] ?? ''));
+                if ($url === '') return '';
+                return ($label !== '' ? $label : 'Page') . ' → ' . $url;
+            }, $others)));
+
+            $tips = json_decode($o['traffic_tips'] ?? '[]', true) ?: [];
+            $tips_str = implode(' | ', array_filter(array_map(function ($t) {
+                if (is_array($t)) {
+                    $lbl = trim((string)($t['label'] ?? ''));
+                    $val = trim((string)($t['value'] ?? ''));
+                    if ($val === '') return '';
+                    return ($lbl !== '' ? "{$lbl}: " : '') . $val;
+                }
+                return is_string($t) ? trim($t) : '';
+            }, $tips)));
+
+            fputcsv($out, [
+                (string)($o['sr'] ?? ''),
+                (string)($o['platform'] ?? ''),
+                (string)($o['offer_name'] ?? ''),
+                (string)($o['offer_id'] ?? ''),
+                (string)($o['category'] ?? ''),
+                !empty($o['coming_soon']) ? 'Yes' : 'No',
+                (string)($o['image_url'] ?? ''),
+                (string)($o['revshare'] ?? ''),
+                (string)($o['cpa'] ?? ''),
+                !empty($o['cpa_manual']) ? 'Yes' : 'No',
+                (string)($o['allowed_geos'] ?? ''),
+                (string)($o['restriction'] ?? ''),
+                $named['Affiliate Page'],
+                $named['Creatives'],
+                $named['Traffic Tips'],
+                $named['Ad Copy Swipes'],
+                (string)($o['clickbank_redirect_url'] ?? ''),
+                $landers_str,
+                $others_str,
+                $tips_str,
+                (string)($o['created_at'] ?? ''),
+                (string)($o['updated_at'] ?? ''),
+            ]);
+        }
+        fclose($out);
         exit;
     }
 
