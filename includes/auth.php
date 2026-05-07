@@ -90,3 +90,17 @@ function advice_type_for(string $advice): string {
 function coming_soon_chip(): string {
     return '<span class="coming-soon-chip">Coming Soon</span>';
 }
+
+/**
+ * Append a `?v=<filemtime>` cache-buster to /uploads/* image URLs so
+ * that re-compressing a file (in-place) busts both browser and CDN
+ * caches — without that, Cloudflare's long-cache rule would happily
+ * keep serving the pre-optimized 3 MB version forever.
+ */
+function bust_image_cache(string $url): string {
+    if ($url === '' || strpos($url, '/uploads/') !== 0) return $url;
+    $local = __DIR__ . '/..' . $url;
+    $mtime = @filemtime($local);
+    if (!$mtime) return $url;
+    return $url . (strpos($url, '?') !== false ? '&' : '?') . 'v=' . $mtime;
+}

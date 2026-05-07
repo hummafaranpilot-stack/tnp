@@ -280,7 +280,7 @@ foreach ($offers as $o) {
                                 <td class="product-cell">
                                     <?php if (!empty($o['image_url'])): ?>
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>"
-                                             src="<?= h($o['image_url']) ?>"
+                                             src="<?= h(bust_image_cache($o['image_url'])) ?>"
                                              alt="<?= h($o['offer_name']) ?>"
                                              decoding="async"
                                              data-retries="0" onerror="retryThumb(this)">

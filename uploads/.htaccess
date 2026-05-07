@@ -26,7 +26,12 @@ php_flag engine off
 </IfModule>
 <IfModule mod_headers.c>
     <FilesMatch "\.(jpe?g|png|gif|webp|svg)$">
-        Header set Cache-Control "public, max-age=31536000, immutable"
+        # `immutable` was removed deliberately — we re-compress files in
+        # place via Optimize Images, and `immutable` would lock browsers/
+        # CDN onto the pre-optimized bytes for a year. We rely instead on
+        # bust_image_cache() to append a ?v=<mtime> query string so the
+        # URL changes whenever the file does.
+        Header set Cache-Control "public, max-age=31536000"
     </FilesMatch>
 </IfModule>
 
