@@ -2,6 +2,7 @@
 require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/db.php';
 require __DIR__ . '/includes/analytics.php';
+require __DIR__ . '/includes/images.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = $_GET['action'] ?? '';
@@ -101,7 +102,27 @@ try {
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             throw new RuntimeException('Failed to save uploaded file');
         }
-        echo json_encode(['ok' => true, 'url' => '/uploads/' . $name]);
+        // Auto-compress: cap longest side at 800 px and re-encode at q=82.
+        // Original product photos are often 3-4 MB which times out on slow
+        // mobile networks even though the thumbnail renders at ~80 px.
+        $cmp = compress_image($dest);
+        echo json_encode([
+            'ok'          => true,
+            'url'         => '/uploads/' . $name,
+            'compressed'  => $cmp['ok'] ?? false,
+            'before_kb'   => isset($cmp['before']) ? (int)round($cmp['before'] / 1024) : null,
+            'after_kb'    => isset($cmp['after'])  ? (int)round($cmp['after'] / 1024)  : null,
+            'reason'      => $cmp['reason'] ?? ($cmp['error'] ?? null),
+        ]);
+        exit;
+    }
+
+    if ($method === 'POST' && $action === 'optimize_uploads') {
+        // One-shot batch compressor for existing files in /uploads/.
+        // Re-encodes every oversized image in place (filenames don't change)
+        // so already-cached references keep working post-cleanup.
+        $r = compress_all_uploads(__DIR__ . '/uploads');
+        echo json_encode($r);
         exit;
     }
 

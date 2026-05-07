@@ -143,10 +143,16 @@ foreach ($tip_counts as $p => $labels) {
                 <h1>Offers</h1>
                 <p class="subtitle">Manage your affiliate offer directory</p>
             </div>
-            <button class="btn btn-primary" onclick="openForm()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Offer
-            </button>
+            <div class="topbar-actions">
+                <button class="btn btn-secondary btn-small" onclick="optimizeImages(this)" title="Re-compress every image in /uploads (in place). Safe to run anytime.">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                    Optimize Images
+                </button>
+                <button class="btn btn-primary" onclick="openForm()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Offer
+                </button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -296,7 +302,7 @@ foreach ($tip_counts as $p => $labels) {
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>"
                                              src="<?= h($o['image_url']) ?>"
                                              alt=""
-                                             loading="lazy" decoding="async"
+                                             decoding="async"
                                              data-retries="0" onerror="retryThumb(this)">
                                     <?php elseif ($soon): ?>
                                         <span class="thumb-empty thumb-soon">Soon</span>
@@ -688,6 +694,35 @@ foreach ($tip_counts as $p => $labels) {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') hideCountries();
     });
+
+    // Re-compress every existing image in /uploads. Safe — re-encodes
+    // in place using the same filename so cached references stay valid.
+    async function optimizeImages(btn) {
+        if (!confirm('Re-compress every image in /uploads? This is safe and only takes a few seconds.')) return;
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = 'Optimizing…';
+        try {
+            const res = await fetch('/api.php?action=optimize_uploads', { method: 'POST', credentials: 'same-origin' });
+            const r = await res.json();
+            if (!r.ok) {
+                alert('Optimize failed: ' + (r.error || 'unknown'));
+                return;
+            }
+            const savedKB = Math.round((r.saved_bytes || 0) / 1024);
+            const errs = (r.errors && r.errors.length) ? `\n\nErrors:\n - ${r.errors.slice(0, 5).join('\n - ')}` : '';
+            alert(
+                `Done.\n\nProcessed: ${r.processed}\n` +
+                `Optimized: ${r.optimized}\nAlready small: ${r.skipped}\n` +
+                `Saved: ${savedKB.toLocaleString()} KB${errs}`
+            );
+        } catch (e) {
+            alert('Optimize failed: ' + (e?.message || e));
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    }
 
     // Retry a thumbnail up to 3 times when it fails to load.
     function retryThumb(img) {

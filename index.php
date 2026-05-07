@@ -282,7 +282,7 @@ foreach ($offers as $o) {
                                         <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>"
                                              src="<?= h($o['image_url']) ?>"
                                              alt="<?= h($o['offer_name']) ?>"
-                                             loading="lazy" decoding="async"
+                                             decoding="async"
                                              data-retries="0" onerror="retryThumb(this)">
                                     <?php elseif ($soon): ?>
                                         <span class="thumb-empty thumb-soon">Soon</span>

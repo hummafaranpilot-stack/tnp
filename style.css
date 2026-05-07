@@ -2655,6 +2655,8 @@ form.coming-soon-on .required { opacity: 0.3; }
 .drag-handle:active { cursor: grabbing; }
 .offer-table .sr { display: flex; align-items: center; gap: 2px; }
 
+.topbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
 /* ============================================
    Export Excel button (public page topbar)
    ============================================ */
