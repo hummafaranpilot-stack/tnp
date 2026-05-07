@@ -12,4 +12,22 @@ php_flag engine off
     Allow from all
 </FilesMatch>
 
+# Long-cache product images. Filenames are random hex, so the same name
+# never points at a different image — safe to cache for a year. Once a
+# browser has the image, it never refetches, so a flaky network on a
+# return visit can't blank out the thumbnail.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png  "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/gif  "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+</IfModule>
+<IfModule mod_headers.c>
+    <FilesMatch "\.(jpe?g|png|gif|webp|svg)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
 Options -Indexes

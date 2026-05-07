@@ -279,7 +279,11 @@ foreach ($offers as $o) {
                                 <td class="sr"><?= h((string)$o['sr']) ?></td>
                                 <td class="product-cell">
                                     <?php if (!empty($o['image_url'])): ?>
-                                        <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>" src="<?= h($o['image_url']) ?>" alt="<?= h($o['offer_name']) ?>">
+                                        <img class="thumb<?= is_transparent_image($o['image_url']) ? ' thumb-clean' : '' ?>"
+                                             src="<?= h($o['image_url']) ?>"
+                                             alt="<?= h($o['offer_name']) ?>"
+                                             loading="lazy" decoding="async"
+                                             data-retries="0" onerror="retryThumb(this)">
                                     <?php elseif ($soon): ?>
                                         <span class="thumb-empty thumb-soon">Soon</span>
                                     <?php else: ?>
@@ -818,6 +822,20 @@ foreach ($offers as $o) {
         document.querySelectorAll('.filter-chip.active').forEach(c => c.classList.remove('active'));
         if (searchInput) searchInput.value = '';
         applyFilters();
+    }
+
+    // Hostinger occasionally drops static asset requests under load —
+    // retry a thumbnail up to 3 times with exponential backoff before
+    // giving up and leaving the broken-image icon. Cache-buster query
+    // forces the browser to skip a poisoned cache entry on retry.
+    function retryThumb(img) {
+        const max = 3;
+        const n = parseInt(img.dataset.retries || '0', 10);
+        if (n >= max) return;
+        img.dataset.retries = String(n + 1);
+        const base = img.src.replace(/[?&]_r=\d+/, '');
+        const sep = base.includes('?') ? '&' : '?';
+        setTimeout(() => { img.src = base + sep + '_r=' + (n + 1); }, 250 * (n + 1));
     }
 </script>
 <?php if (!empty($__visit['visit_id'])): ?>
