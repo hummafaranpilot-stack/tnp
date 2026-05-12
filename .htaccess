@@ -9,6 +9,7 @@ RewriteRule ^includes/ - [F,L]
 # Clean URLs
 RewriteRule ^admin/?$ admin.php [L]
 RewriteRule ^analytics/?$ analytics.php [L]
+RewriteRule ^humma/?$ humma.php [L]
 RewriteRule ^login/?$ login.php [L]
 RewriteRule ^logout/?$ logout.php [L]
 
